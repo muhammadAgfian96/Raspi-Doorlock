@@ -11,7 +11,7 @@ GPIO.setwarnings(False)    # Ignore warning for now
 GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
 GPIO.setup(16, GPIO.OUT, initial=GPIO.LOW) 
 
-
+#------- connection setting
 context = zmq.Context()
 #  Socket to talk to server
 print("Connecting to hello world server…")
@@ -19,34 +19,60 @@ print("Connecting to hello world server…")
 socket = context.socket(zmq.SUB)
 
 socket.connect("tcp://192.168.0.5:5556") #change this to ip-server
-topicfilter ="1"
+topicfilter ="pi-depan"
 socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
+
+#------- electrical setting
+pin_out = 16
+
+#------- 
 Open_status = False
 count_close = 0
+
+def magnet_on():
+    GPIO.output(pin_out, GPIO.HIGH)
+    print("High")
+
+def magnet_off():
+    GPIO.output(pin_out, GPIO.LOW)
+    print("High")
+
+def display(pesan):
+    pass
+
+def rcvMsg():
+    message = socket.recv(flags=zmq.NOBLOCK)
+    now = datetime.now()
+    now = now.strftime("%d/%m/%Y-%H:%M:%S")
+    name = str(message).split("'")[1]
+    print("-- Received %s %s" % (message,now))
+    name = name.split(" ")[1]
+    return name
+
+
 while True:
     
-    if Open_status == True:
-        GPIO.output(16, GPIO.HIGH)
-        print("High")
-        count_close+=1
-        sleep(2)        
-        GPIO.output(16, GPIO.LOW) 
-        Open_status=False
-        count_close=0
-        print("Low")
-    
+    # no received handle, so program can running and not stuck using zmq.NOBLOCK
     try:
-        message = socket.recv(flags=zmq.NOBLOCK)
-        now = datetime.now()
-        now = now.strftime("%d/%m/%Y-%H:%M:%S")
-        name = str(message).split("'")[1]
-        print("-- Received %s %s" % (message,now))
-        name = name.split(" ")[1]
-        if name == "boy":
+        pred_name = rcvMsg().lower()
+        
+        if pred_name == "unknown":
             #socket.send(b"High")
-            print("open")
+            print("Unknown, Not Open")
+            Open_status = False
+            display("Silakan Hubungi Petugas")
+
+        elif pred_name != "unknown":
+            print("Silahkan Masuk!")
             Open_status = True
               
     except zmq.Again as e:
         #print("-- no received")
         pass
+
+    # Jika Pintu Tebuka
+    if Open_status == True:
+        magnet_off()
+        sleep(3)
+        magnet_on()
+        Open_status = False
