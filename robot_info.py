@@ -8,9 +8,9 @@ import zmq
 # import RPi.GPIO as GPIO    # Import Raspberry Pi GPIO library
 import time
 from time import sleep     # Import the sleep function from the time module
-# GPIO.setwarnings(False)    # Ignore warning for now
-# GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
-# GPIO.setup(16, GPIO.OUT, initial=GPIO.LOW) 
+GPIO.setwarnings(False)    # Ignore warning for now
+GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
+GPIO.setup(16, GPIO.OUT, initial=GPIO.LOW) 
 
 #------- connection setting
 context = zmq.Context()
@@ -36,11 +36,11 @@ count_close = 0
 old_time = time.time()
 
 def magnet_on():
-    # GPIO.output(pin_out, GPIO.HIGH)
+    GPIO.output(pin_out, GPIO.HIGH)
     print("on")
 
 def magnet_off():
-    # GPIO.output(pin_out, GPIO.LOW)
+    GPIO.output(pin_out, GPIO.LOW)
     print("off")
 
 def display(pesan):
