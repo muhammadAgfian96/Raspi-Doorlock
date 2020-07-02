@@ -18,14 +18,14 @@ print("Connecting to hello world server…")
 #socket = context.socket(zmq.REQ)
 socket = context.socket(zmq.SUB)
 
-socket.connect("tcp://192.168.0.5:5556") #change this to ip-server
+socket.connect("tcp://11.11.11.11:5556") #change this to ip-server
 topicfilter ="pi-depan"
 socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 #------- electrical setting
 pin_out = 16
 
-#------- 
+#------- state
 Open_status = False
 count_close = 0
 
@@ -65,7 +65,7 @@ while True:
         elif pred_name != "unknown":
             print("Silahkan Masuk!")
             Open_status = True
-              
+
     except zmq.Again as e:
         #print("-- no received")
         pass
