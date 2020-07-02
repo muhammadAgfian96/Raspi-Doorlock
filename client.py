@@ -35,7 +35,7 @@ def magnet_on():
 
 def magnet_off():
     GPIO.output(pin_out, GPIO.LOW)
-    print("High")
+    print("Low")
 
 def display(pesan):
     pass
@@ -56,7 +56,7 @@ while True:
     try:
         pred_name = rcvMsg().lower()
         
-        if pred_name == "unknown":
+        if pred_name.lower() == "unknown":
             #socket.send(b"High")
             print("Unknown, Not Open")
             Open_status = False

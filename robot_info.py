@@ -5,12 +5,12 @@
 # -----
 from datetime import datetime
 import zmq
-# import RPi.GPIO as GPIO    # Import Raspberry Pi GPIO library
+import RPi.GPIO as GPIO    # Import Raspberry Pi GPIO library
 import time
 from time import sleep     # Import the sleep function from the time module
 GPIO.setwarnings(False)    # Ignore warning for now
 GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
-GPIO.setup(16, GPIO.OUT, initial=GPIO.LOW) 
+GPIO.setup(8, GPIO.OUT, initial=GPIO.LOW) 
 
 #------- connection setting
 context = zmq.Context()
@@ -28,19 +28,21 @@ socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
 socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
 
 #------- electrical setting
-pin_out = 16
+pin_out = 8
 
 #------- state
 Open_status = False
 count_close = 0
 old_time = time.time()
+first_time = True
+start_time = time.time()
 
 def magnet_on():
-    GPIO.output(pin_out, GPIO.HIGH)
+    GPIO.output(pin_out, GPIO.LOW)
     print("on")
 
 def magnet_off():
-    GPIO.output(pin_out, GPIO.LOW)
+    GPIO.output(pin_out, GPIO.HIGH)
     print("off")
 
 def display(pesan):
@@ -77,7 +79,7 @@ def rcvMsg():
 
 def main():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
-    global Open_status, old_time
+    global Open_status, old_time, first_time, start_time
     try:
         pred_name, pred_bbox = rcvMsg()
         print(pred_name, pred_bbox)
@@ -100,11 +102,20 @@ def main():
 
     # Jika Pintu Tebuka
     if Open_status == True:
-        if time.time() - old_time > 3:
+        if first_time == True:
+            start_time = time.time()
+            first_time = False
+            print("get first time")
+        else:
+            magnet_off()
+            print("[unlocked] magnet still off ", time.time() - start_time)
+            
+        if time.time() - start_time >= 3:
             magnet_on()
+            print("[locked] magnet on")
             Open_status = False
-            old_time = time.time()
-        magnet_off()
+            first_time = True
+        
     if pred_bbox is None:
         return None, None
     else:
