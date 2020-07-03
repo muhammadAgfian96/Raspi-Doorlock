@@ -98,7 +98,7 @@ def show_time():
     realtime.after(1000, show_time)
 
 def insert_list(nama):
-    name_time = "%s \t %s" % (nama, str(datetime.datetime.now().strftime("%H:%M"))) #:%S
+    name_time = "%s <> %s" % (nama, str(datetime.datetime.now().strftime("%H:%M"))) #:%S
     ls_history.insert(0, name_time)
     # ls_history.after(1000, insert_list)
 
@@ -120,7 +120,7 @@ def show_frame():
             robot_info.Open_status
             bbox, pred_name = robot_info.main()
             if bbox is not None:
-                muka = frame[bbox[1]-10:bbox[3]+10, bbox[0]-20:bbox[2]+20]
+                muka = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
                 insert_list(pred_name)
                 # muka = cv2.imread('muka.jpg')
                 muka = cv2.resize(muka, (50,50))
