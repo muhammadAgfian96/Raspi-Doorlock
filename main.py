@@ -10,8 +10,12 @@ from ui_main import Ui_MainWindow
 
 # IMPORT FUNCTIONS
 from ui_functions import *
+import ui_iot
+
 import cv2
 import time
+import datetime
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -75,10 +79,20 @@ class MainWindow(QMainWindow):
         qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
         # show image in img_label
         self.ui.label_img_stream.setPixmap(QPixmap.fromImage(qImg))
+        
+        ui_iot.Open_status
+        bbox, pred_name = ui_iot.main()
+        if bbox is not None:
+            self.insert_list(pred_name)
+
 
     def showTime(self):
-        str_time = str(datetime.datetime.now().strftime("%d-%m-%Y | %H:%M:%S"))
+        str_time = str(datetime.datetime.now().strftime("%d-%m-%Y - %H:%M:%S"))
         self.ui.lbl_title.setText("Door Lock | {}".format(str_time))
+    
+    def insert_list(self,nama):
+        time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M"))) #:%S
+        self.ui.lbl_name.setText("{} masuk di jam {}".format(nama, time_masuk) )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

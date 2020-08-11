@@ -27,7 +27,7 @@ socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
 socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
 socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
 
-#------- electrical setting
+#------- electrical settings
 pin_out = 8
 
 #------- state
