@@ -91,11 +91,11 @@ class MainWindow(QMainWindow):
         self.ui.lbl_title.setText("Door Lock | {}".format(str_time))
     
     def insert_list(self,nama):
-        time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M"))) #:%S
+        time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
         self.ui.lbl_name.setText("{} masuk di jam {}".format(nama, time_masuk) )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    # window.showFullScreen()
+    window.showFullScreen()
     sys.exit(app.exec_())
