@@ -67,8 +67,14 @@ border-radius:20px;</string>
        <enum>QFrame::Raised</enum>
       </property>
       <layout class="QVBoxLayout" name="main_layout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
        <property name="leftMargin">
         <number>9</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
        </property>
        <item>
         <widget class="QFrame" name="title_bar">
@@ -298,10 +304,13 @@ QPushButton:hover{
                <number>128</number>
               </property>
               <property name="topMargin">
-               <number>2</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
                <number>128</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
               </property>
               <item>
                <widget class="QFrame" name="fr_stream_video">
@@ -407,7 +416,7 @@ background-color: rgb(238, 238, 236);</string>
                 <property name="frameShadow">
                  <enum>QFrame::Raised</enum>
                 </property>
-                <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <layout class="QHBoxLayout" name="icon_btn_layout">
                  <property name="spacing">
                   <number>72</number>
                  </property>
@@ -632,7 +641,7 @@ background-color: rgb(238, 238, 236);</string>
   </widget>
  </widget>
  <resources>
-  <include location="test_2.qrc"/>
+  <include location="../../installasi/test_2.qrc"/>
  </resources>
  <connections/>
 </ui>

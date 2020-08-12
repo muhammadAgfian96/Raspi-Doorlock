@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         ret, image = self.cap.read()
         # convert image to RGB format
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (480,320))
+        image = cv2.resize(image, (720,480))
 
         # get image infos
         height, width, channel = image.shape
@@ -97,5 +97,5 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.showFullScreen()
+    # window.showFullScreen()
     sys.exit(app.exec_())
