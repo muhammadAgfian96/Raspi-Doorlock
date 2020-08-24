@@ -1,9 +1,9 @@
-from main import *
+from main2 import *
 import datetime
 import cv2
 
 GLOBAL_STATE = 0 
-
+have_pressed = -1
 class UIFunctions(MainWindow):
 
     def maximize_restore(self):
@@ -46,26 +46,22 @@ class UIFunctions(MainWindow):
         # APPLY DROPSHADOW TO FRAME
         self.ui.main.setGraphicsEffect(self.shadow)
 
-        # MAXIMIZE / RESTORE
-        self.ui.btn_max.clicked.connect(lambda: UIFunctions.maximize_restore(self))
-
-        # MINIMIZE
-        self.ui.btn_min.clicked.connect(lambda: self.showMinimized())
-
-        # CLOSE
-        self.ui.btn_exit.clicked.connect(lambda: self.close())
-
-        ## ==> CREATE SIZE GRIP TO RESIZE WINDOW
-        self.sizegrip = QSizeGrip(self.ui.frame_grip)
-        self.sizegrip.setStyleSheet("QSizeGrip { width: 10px; height: 10px; margin: 5px } QSizeGrip:hover { background-color: rgb(150, 200, 202, 255) }")
-        self.sizegrip.setToolTip("Resize Window")
 
         # my function
         self.ui.btn_call.clicked.connect(lambda: UIFunctions.pressed_Call(self))
 
     ## BUTTONS FUCTION
     def pressed_Call(self):
-        print("pressed Call")
+        global have_pressed
+        have_pressed *= -1
+        if have_pressed > 0:
+            self.ui.btn_call.setStyleSheet("border-image: url(:/icons/icon_set/btn_end_call.png);")
+            self.ui.lbl_icon_lock.setStyleSheet("border-image: url(:/icons/icon_set/unlock.png);")
+        else:
+            self.ui.btn_call.setStyleSheet("border-image: url(:/icons/icon_set/call_btnic_call.png);")
+            self.ui.lbl_icon_lock.setStyleSheet("border-image: url(:/icons/icon_set/lock.png);")
+        str_time = str(datetime.datetime.now().strftime("%A %d-%m-%Y | %H:%M:%S"))        
+        print(str_time)
 
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%d-%m-%Y | %H:%M:%S"))

@@ -13,6 +13,10 @@ from ui_functions import *
 import cv2
 import time
 import datetime
+bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
+         'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
+         'Nov', 'Dec']
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -20,7 +24,8 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
-        self.cap = cv2.VideoCapture(path_cam)
+        path_cam1 = 'http://11.11.11.12:8555' 
+        self.cap = cv2.VideoCapture(path_cam1)
         time.sleep(1)
         # create a timer
         self.streamTimer = QTimer()
@@ -67,8 +72,19 @@ class MainWindow(QMainWindow):
         ret, image = self.cap.read()
         # convert image to RGB format
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # image = cv2.resize(image, (720,386))
-
+        h_img, w_img, ch =image.shape
+        h_1 = h_img//2
+        w_1  = w_img//2
+        print(h_1, w_1)
+        constant_val = 100
+        # image = cv2.resize(image, (608,608))
+        cv2.putText(image, "Put Your Face Here in Box", 
+                    (w_1-constant_val, h_1-constant_val-5),
+                    cv2.FONT_HERSHEY_COMPLEX, 0.3, (255,0,0), thickness=1)
+        cv2.rectangle(image, 
+                        (w_1-constant_val, h_1-constant_val), 
+                        (w_1+constant_val, h_1+constant_val), 
+                        (255,0,0), thickness=1)
         # get image infos
         height, width, channel = image.shape
         step = channel * width
@@ -87,6 +103,12 @@ class MainWindow(QMainWindow):
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%H:%M"))
         self.ui.lbl_jam.setText("{}".format(str_time))
+        hari=str(datetime.datetime.now().strftime("%A")) 
+        tanggal=str(datetime.datetime.now().strftime("%d")) 
+        idx_bulan=int(datetime.datetime.now().strftime("%m")) 
+        bulan_name = bulan[idx_bulan-1]
+        # hari = hari[:3]
+        self.ui.lbl_tanggal.setText(f"{hari}, {tanggal} {bulan_name}")
     
     def insert_list(self,nama):
         time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
@@ -95,5 +117,5 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.showFullScreen()
+    # window.showFullScreen()
     sys.exit(app.exec_())

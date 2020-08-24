@@ -19,8 +19,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>16777215</width>
-    <height>16777215</height>
+    <width>1024</width>
+    <height>600</height>
    </size>
   </property>
   <property name="font">
@@ -32,9 +32,12 @@
    <string>AITI Check In</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: rgb(85, 87, 83);</string>
+   <string notr="true">background-color: none;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QVBoxLayout" name="Layout_central_widget">
     <property name="spacing">
      <number>0</number>
@@ -96,6 +99,12 @@ border-radius:10px;</string>
          <layout class="QVBoxLayout" name="Layout_frame_info">
           <item>
            <widget class="QFrame" name="fr_jam">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>130</height>
+             </size>
+            </property>
             <property name="styleSheet">
              <string notr="true">background-color:none;</string>
             </property>
@@ -106,13 +115,17 @@ border-radius:10px;</string>
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QVBoxLayout" name="Layout_fr_jam">
+             <property name="topMargin">
+              <number>0</number>
+             </property>
              <property name="bottomMargin">
               <number>0</number>
              </property>
              <item>
               <widget class="QLabel" name="lbl_jam">
                <property name="styleSheet">
-                <string notr="true">font: 25 80pt light &quot;Ubuntu&quot;;
+                <string notr="true">font: 25 75pt light &quot;Ubuntu&quot;;
+font-size:55pt;
 color: rgb(238, 238, 236);</string>
                </property>
                <property name="text">
@@ -156,7 +169,8 @@ color: rgb(238, 238, 236);</string>
              <item>
               <widget class="QLabel" name="lbl_tanggal">
                <property name="styleSheet">
-                <string notr="true">font: 57 40pt &quot;Roboto&quot;;
+                <string notr="true">font: 57 35pt &quot;Roboto&quot;;
+font-size:25pt;
 color: rgb(238, 238, 236);</string>
                </property>
                <property name="text">
@@ -182,30 +196,45 @@ color: rgb(238, 238, 236);</string>
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QVBoxLayout" name="Layout_fr_call">
-             <item>
-              <widget class="QLabel" name="ic_call">
+             <item alignment="Qt::AlignHCenter">
+              <widget class="QPushButton" name="btn_call">
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
+                 <width>110</width>
+                 <height>110</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>120</width>
                  <height>120</height>
                 </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">border-image: url(:/icons/icon_set/call_btnic_call.png);</string>
                </property>
                <property name="text">
                 <string/>
                </property>
-               <property name="pixmap">
-                <pixmap resource="ui_icon_set.qrc">:/icons/icon_set/call_btnic_call.png</pixmap>
+               <property name="iconSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
+               <property name="flat">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="lbl_info_call">
                <property name="styleSheet">
                 <string notr="true">color: rgb(252, 175, 62);
-font: 57 italic 8pt &quot;Roboto&quot;;
+font: 57 italic 11pt &quot;Roboto&quot;;
 </string>
                </property>
                <property name="text">
@@ -229,44 +258,16 @@ font: 57 italic 8pt &quot;Roboto&quot;;
             </property>
             <layout class="QHBoxLayout" name="Layout_fr_pintu">
              <item>
-              <widget class="QLabel" name="ic_ruang">
-               <property name="minimumSize">
-                <size>
-                 <width>100</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>100</height>
-                </size>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap resource="ui_icon_set.qrc">:/icons/icon_set/door.png</pixmap>
-               </property>
-               <property name="scaledContents">
-                <bool>true</bool>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QLabel" name="label">
                <property name="minimumSize">
                 <size>
-                 <width>230</width>
+                 <width>0</width>
                  <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>230</width>
+                 <width>16777215</width>
                  <height>16777215</height>
                 </size>
                </property>
@@ -279,7 +280,7 @@ font: 75 30pt bold &quot;Roboto&quot;;</string>
 Persalinan</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -308,10 +309,10 @@ Persalinan</string>
          </property>
          <layout class="QVBoxLayout" name="Layout_frame_recog">
           <property name="leftMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -327,6 +328,9 @@ Persalinan</string>
               <height>450</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">border-radius:20px;</string>
+            </property>
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
             </property>
@@ -336,8 +340,23 @@ Persalinan</string>
             <layout class="QVBoxLayout" name="Layout_fr_video">
              <item>
               <widget class="QLabel" name="lbl_video">
+               <property name="maximumSize">
+                <size>
+                 <width>608</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">border-radius:20px;</string>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Plain</enum>
+               </property>
                <property name="text">
                 <string>loading...</string>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -362,8 +381,7 @@ Persalinan</string>
              </size>
             </property>
             <property name="styleSheet">
-             <string notr="true">border-radius:50px;
-border-image: url(:/icons/icon_set/wadah nama.png);</string>
+             <string notr="true"/>
             </property>
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
@@ -373,69 +391,93 @@ border-image: url(:/icons/icon_set/wadah nama.png);</string>
             </property>
             <layout class="QHBoxLayout" name="Layout_fr_name_plate">
              <property name="leftMargin">
-              <number>18</number>
+              <number>54</number>
+             </property>
+             <property name="rightMargin">
+              <number>54</number>
              </property>
              <item>
-              <widget class="QLabel" name="lbl_name_recog">
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>70</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>70</width>
-                 <height>70</height>
-                </size>
-               </property>
+              <widget class="QFrame" name="fr_wadah_recog">
                <property name="styleSheet">
-                <string notr="true">border-image: none;</string>
+                <string notr="true">border-image: url(:/icons/icon_set/wadah nama.png);</string>
                </property>
-               <property name="text">
-                <string/>
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
                </property>
-               <property name="pixmap">
-                <pixmap resource="ui_icon_set.qrc">:/icons/icon_set/lock.png</pixmap>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
                </property>
-               <property name="scaledContents">
-                <bool>true</bool>
+               <property name="lineWidth">
+                <number>7</number>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+               <property name="midLineWidth">
+                <number>1</number>
                </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbl_icon">
-               <property name="minimumSize">
-                <size>
-                 <width>400</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">font-size:35px; border-image: none;</string>
-               </property>
-               <property name="text">
-                <string>Unknown</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="lbl_counting">
-               <property name="styleSheet">
-                <string notr="true">border-image: none;</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
+               <layout class="QHBoxLayout" name="Layout_wadah_prediksi">
+                <property name="leftMargin">
+                 <number>18</number>
+                </property>
+                <property name="rightMargin">
+                 <number>9</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="lbl_icon_lock">
+                  <property name="maximumSize">
+                   <size>
+                    <width>60</width>
+                    <height>60</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">border-image: url(:/icons/icon_set/lock.png);</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_name_recog">
+                  <property name="styleSheet">
+                   <string notr="true">border-image: none; font-size:20pt;</string>
+                  </property>
+                  <property name="frameShadow">
+                   <enum>QFrame::Raised</enum>
+                  </property>
+                  <property name="text">
+                   <string>Tidak Dikenali</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_count">
+                  <property name="maximumSize">
+                   <size>
+                    <width>50</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">border-image:none;</string>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::NoFrame</enum>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="textFormat">
+                   <enum>Qt::PlainText</enum>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </widget>
              </item>
             </layout>
