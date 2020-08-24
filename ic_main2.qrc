@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>/door.png</file>
+    <file>/wadah nama.png</file>
+    <file>/unlock.png</file>
+    <file>/lock.png</file>
+    <file>/btn_end_call.png</file>
+    <file>/call_btnic_call.png</file>
+  </qresource>
+</RCC>
