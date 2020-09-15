@@ -1,12 +1,20 @@
 import sys
 import platform
+
+try:
+    import RPi.GPIO as gpio
+    on_RPi = True
+except (ImportError, RuntimeError):
+    on_RPi = False
+
+# GUI FILE
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent, QTimer)
 from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient, QImage)
 from PyQt5.QtWidgets import *
-
-# GUI FILE
 from ui_main2 import Ui_MainWindow
+
+# Raspi Sensors and Actuators
 from ui_functions import *
 
 
@@ -25,7 +33,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
         path_cam1 = 'http://11.11.11.12:8555' 
-        self.cap = cv2.VideoCapture(path_cam1)
+        self.cap = cv2.VideoCapture(0)
         time.sleep(1)
         # create a timer
         self.streamTimer = QTimer()
@@ -75,16 +83,16 @@ class MainWindow(QMainWindow):
         h_img, w_img, ch =image.shape
         h_1 = h_img//2
         w_1  = w_img//2
-        print(h_1, w_1)
+        # print(h_1, w_1)
         constant_val = 100
         # image = cv2.resize(image, (608,608))
         cv2.putText(image, "Put Your Face Here in Box", 
                     (w_1-constant_val, h_1-constant_val-5),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.3, (255,0,0), thickness=1)
+                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
         cv2.rectangle(image, 
                         (w_1-constant_val, h_1-constant_val), 
                         (w_1+constant_val, h_1+constant_val), 
-                        (255,0,0), thickness=1)
+                        (255,0,0), thickness=3)
         # get image infos
         height, width, channel = image.shape
         step = channel * width
@@ -94,10 +102,11 @@ class MainWindow(QMainWindow):
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
         
         # ------- Function for Doorlock --------
-        # ui_iot.Open_status
-        # bbox, pred_name = ui_iot.main()
-        # if bbox is not None:
-        #     self.insert_list(pred_name)
+        if on_RPi:
+            ui_iot.Open_status
+            bbox, pred_name = ui_iot.main()
+            if bbox is not None:
+                self.insert_list(pred_name)
 
 
     def showTime(self):
@@ -117,5 +126,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    # window.showFullScreen()
+    if on_RPi:
+        window.showFullScreen()
     sys.exit(app.exec_())

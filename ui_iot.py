@@ -3,26 +3,60 @@
 # https://learning-0mq-with-pyzmq.readthedocs.io/en/latest/pyzmq/patterns/pubsub.html
 # https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
 # -----
+
+
 from datetime import datetime
 import zmq
-import RPi.GPIO as GPIO    # Import Raspberry Pi GPIO library
+from easydict import EasyDict as edict
+from utils import sensors
+import json
 import time
 from time import sleep     # Import the sleep function from the time module
+
+
+import RPi.GPIO as GPIO
 GPIO.setwarnings(False)    # Ignore warning for now
 GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
-GPIO.setup(8, GPIO.OUT, initial=GPIO.LOW) 
+
+#---- list pin pcb bolong ------
+pcb_bolong = edict()
+p_magnet_relay = 32 # ---- relay
+p_led_relay    = 26 # 
+p_trig_jarak   = 18 # ---- sensor jarak
+p_echo_jarak   = 16 # 
+p_exit_btn     = 8  # ---- button
+p_buzzer       = 12 # ---- beep
+p_RST_RFID     = 13 # ---- RFID
+p_MISO_RFID    = 35 
+p_MOSI_RFID    = 38
+p_SCK_RFID     = 40
+p_SDA_RFID     = 36
+p_SDA_THERM    = 3  # ---- Thermal Cam
+p_SCL_THERM    = 5
+
+
+#------- init pin
+exit_btn = sensors.PushButton(p_exit_btn)
+beep     = sensors.BeepBuzzer(p_buzzer)
+distance = sensors.Jarak(p_trig_jarak, p_echo_jarak)
+relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
+relay_led = sensors.Relay(p_led_relay, name="led")
+
+
+#------- GET FROM SERVER
+addr_server = "tcp://11.11.11.11:5556"
+topicfilter = "pi-depan"
 
 #------- connection setting
 context = zmq.Context()
 #  Socket to talk to server
-print("Connecting to hello world server…")
+print("Connecting to server…")
 #socket = context.socket(zmq.REQ)
 socket = context.socket(zmq.SUB)
 
-socket.connect("tcp://11.11.11.11:5556") #change this to ip-server
-topicfilter ="pi-depan"
+socket.connect(addr_server) #change this to ip-server
 socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter, encoding='utf-8')
-# KeepAlive whe connection unstable
+# KeepAlive when connection unstable
 socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
 socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
 socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
@@ -36,14 +70,6 @@ count_close = 0
 old_time = time.time()
 first_time = True
 start_time = time.time()
-
-def magnet_on():
-    GPIO.output(pin_out, GPIO.LOW)
-    print("on")
-
-def magnet_off():
-    GPIO.output(pin_out, GPIO.HIGH)
-    print("off")
 
 def display(pesan):
     pass
@@ -77,14 +103,22 @@ def rcvMsg():
     print("-- Received %s %s" % (message,now))
     return name, bbox
 
+def rcvMsgJSON():
+    data_obj = socket.recv_json(flags=zmq.NOBLOCK)
+    data = json.load(data_obj)
+    print("JSON data:\n", data)
+    return data['name'], data['bbox']
+
+
 def main():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global Open_status, old_time, first_time, start_time
     try:
-        pred_name, pred_bbox = rcvMsg()
+        # pred_name, pred_bbox = rcvMsg()
+        pred_name, pred_bbox  = rcvMsgJSON()
         print(pred_name, pred_bbox)
         
-        if pred_name == "Unknown":
+        if pred_name.lower() == "unknown":
             #socket.send(b"High")
             print("Unknown, Not Open")
             Open_status = False
@@ -96,9 +130,8 @@ def main():
 
     except zmq.Again as e:
         # print("-- no received")
-        
         pred_bbox = None
-        
+
 
     # Jika Pintu Tebuka
     if Open_status == True:
@@ -107,11 +140,12 @@ def main():
             first_time = False
             print("get first time")
         else:
-            magnet_off()
+            relay_magnet.off(v=True)
             print("[unlocked] magnet still off ", time.time() - start_time)
             
         if time.time() - start_time >= 3:
-            magnet_on()
+            # magnet_on()
+            relay_magnet.on(v=True)
             print("[locked] magnet on")
             Open_status = False
             first_time = True
