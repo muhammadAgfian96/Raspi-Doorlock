@@ -18,6 +18,7 @@ from ui_main2 import Ui_MainWindow
 # Raspi Sensors and Actuators
 from ui_functions import *
 
+from utils.draw_helper import draw_box_name
 
 import cv2
 import time
@@ -92,6 +93,14 @@ class MainWindow(QMainWindow):
                         (w_1-constant_val, h_1-constant_val), 
                         (w_1+constant_val, h_1+constant_val), 
                         (255,0,0), thickness=3)
+        # ------- Function for Doorlock --------
+        if on_RPi:
+            ui_iot.Open_status
+            bbox, pred_name = ui_iot.main()
+            if bbox is not None:
+                self.insert_list(pred_name)
+                draw_box_name(bbox, pred_name, image)
+                
         # get image infos
         height, width, channel = image.shape
         step = channel * width
@@ -100,12 +109,7 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
         
-        # ------- Function for Doorlock --------
-        if on_RPi:
-            ui_iot.Open_status
-            bbox, pred_name = ui_iot.main()
-            if bbox is not None:
-                self.insert_list(pred_name)
+
 
 
     def showTime(self):

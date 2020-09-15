@@ -74,8 +74,9 @@ start_time = time.time()
 def display(pesan):
     pass
 
-def scalling(bbox):
-    targetSize = (270,250)
+def scalling(image, bbox):
+    
+    targetSize = image.shape
     originalSize = (400,300)
     scaleX = targetSize[0]/originalSize[0]
     scaleY = targetSize[1]/originalSize[1]
