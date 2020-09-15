@@ -31,3 +31,4 @@ v4l2:///dev/video0 \
 --sout '#standard{access=http{mime=multipart/x-mixed-replace;boundary=--7b3cc56e5f51db803f790dad720ed50a},mux=mpjpeg,dst=:8555/}' \
 -I dummy
 ```
+test
