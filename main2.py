@@ -4,6 +4,7 @@ import platform
 try:
     import RPi.GPIO as gpio
     on_RPi = True
+    import ui_iot
 except (ImportError, RuntimeError):
     on_RPi = False
 
@@ -33,7 +34,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
         path_cam1 = 'http://11.11.11.12:8555' 
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(path_cam1)
         time.sleep(1)
         # create a timer
         self.streamTimer = QTimer()
@@ -66,11 +67,9 @@ class MainWindow(QMainWindow):
 
 
         ## SHOW ==> MAIN WINDOW
-        ########################################################################
         self.show()
 
     ## APP EVENTS
-    ########################################################################
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
 
@@ -121,7 +120,7 @@ class MainWindow(QMainWindow):
     
     def insert_list(self,nama):
         time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
-        self.ui.lbl_name.setText("{} masuk di jam {}".format(nama, time_masuk) )
+        self.ui.lbl_name_recog.setText("{} masuk di jam {}".format(nama, time_masuk) )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

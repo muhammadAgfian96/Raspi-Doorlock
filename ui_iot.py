@@ -104,12 +104,14 @@ def rcvMsg():
     return name, bbox
 
 def rcvMsgJSON():
-    data_obj = socket.recv_json(flags=zmq.NOBLOCK)
-    data = json.load(data_obj)
-    print("JSON data:\n", data)
-    return data['name'], data['bbox']
-
-
+    data = socket.recv_multipart(flags=zmq.NOBLOCK)
+    print(data)
+    #data = json.loads(msg)
+    data = json.loads(data[1])
+    data = edict(data)
+    print("JSON data:\n", type(data), data)
+    return data.name, data.bbox
+    
 def main():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global Open_status, old_time, first_time, start_time
