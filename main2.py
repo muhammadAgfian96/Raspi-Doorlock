@@ -1,12 +1,7 @@
 import sys
 import platform
 
-try:
-    import RPi.GPIO as gpio
-    on_RPi = True
-    import ui_iot
-except (ImportError, RuntimeError):
-    on_RPi = False
+
 
 # GUI FILE
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -18,7 +13,15 @@ from ui_main2 import Ui_MainWindow
 # Raspi Sensors and Actuators
 from ui_functions import *
 
-from utils.draw_helper import draw_box_name
+
+try:
+    import RPi.GPIO as gpio
+    on_RPi = True
+    import raspi_function as rpi
+except (ImportError, RuntimeError):
+    on_RPi = False
+
+from utils.vision_helper import draw_box_name
 
 import cv2
 import time
@@ -43,6 +46,7 @@ class MainWindow(QMainWindow):
         # set timer timeout callback function
         self.streamTimer.timeout.connect(self.stream_camera_on)
 
+        # for update time on display
         self.showtimeTimer = QTimer()
         self.showtimeTimer.setInterval(1000)
         self.showtimeTimer.timeout.connect(self.showTime)
@@ -93,11 +97,12 @@ class MainWindow(QMainWindow):
                         (w_1-constant_val, h_1-constant_val), 
                         (w_1+constant_val, h_1+constant_val), 
                         (255,0,0), thickness=3)
+
         # ------- Function for Doorlock --------
         if on_RPi:
-            ui_iot.Open_status
-            bbox, pred_name = ui_iot.main()
-            if bbox is not None:
+            rpi.Open_status
+            bbox, pred_name = rpi.main()
+            if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
                 draw_box_name(bbox, pred_name, image)
                 
@@ -124,7 +129,7 @@ class MainWindow(QMainWindow):
     
     def insert_list(self,nama):
         time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
-        self.ui.lbl_name_recog.setText("{} masuk di jam {}".format(nama, time_masuk) )
+        self.ui.lbl_name_recog.setText("{} @ {}".format(nama, time_masuk) )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

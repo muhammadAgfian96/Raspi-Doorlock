@@ -61,9 +61,6 @@ socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
 socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
 socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
 
-#------- electrical settings
-pin_out = 8
-
 #------- state
 Open_status = False
 count_close = 0
@@ -87,6 +84,7 @@ def scalling(image, bbox):
     bbox[3] = int(bbox[3]*scaleY)
     return bbox
 
+# old function -not used
 def rcvMsg():
     message = socket.recv_string(flags=zmq.NOBLOCK, encoding='utf-8')
     now = datetime.now()
@@ -117,7 +115,6 @@ def main():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global Open_status, old_time, first_time, start_time
     try:
-        # pred_name, pred_bbox = rcvMsg()
         pred_name, pred_bbox  = rcvMsgJSON()
         print(pred_name, pred_bbox)
         
