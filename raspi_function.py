@@ -161,11 +161,11 @@ def main_input():
         Open_status = True
 
     # ---- RFID
-    
+
 
 def main_output():
     # Jika Pintu Tebuka
-    if Open_status == True:
+    if Open_status ==  True:
         if first_time == True:
             start_time = time.time()
             first_time = False
