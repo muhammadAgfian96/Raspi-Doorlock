@@ -20,7 +20,7 @@ class Relay():
     def __init__(self, pin_relay, name="default"):
         self.__pin_relay = pin_relay
         self.__name_relay = name
-        GPIO.setup(self.pin_relay, GPIO.OUT, initial=GPIO.LOW) 
+        GPIO.setup(self.__pin_relay, GPIO.OUT, initial=GPIO.LOW) 
 
     def on(self,v=False):
         GPIO.output(self.__pin_relay, GPIO.LOW)

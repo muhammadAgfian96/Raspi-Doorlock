@@ -70,6 +70,7 @@ old_time = time.time()
 first_time = True
 first_time_jarak = True
 start_time = time.time()
+signal_open = 0
 
 def display(pesan):
     pass
@@ -142,6 +143,8 @@ def main_vision():
         
 
 def main_input():
+    global Open_status, first_time_jarak, signal_open
+
     # ---- exit button
     if exit_btn.isPressed:
         time.sleep(0.2)
@@ -166,6 +169,7 @@ def main_input():
 
 
 def main_output():
+    global Open_status, first_time, old_time
     # Jika Pintu Tebuka
     if Open_status ==  True:
         if first_time == True:
