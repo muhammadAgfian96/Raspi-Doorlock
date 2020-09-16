@@ -53,26 +53,26 @@ class BeepBuzzer():
 
 class Jarak():
     def __init__(self, pinTrig, pinEcho):
-        self.pTrig = pinTrig
-        self.pEcho = pinEcho
-        GPIO.setup(self.pTrig, GPIO.OUT)
-        GPIO.setup(self.pEcho, GPIO.IN)
+        self.__pTrig = pinTrig
+        self.__pEcho = pinEcho
+        GPIO.setup(self.__pTrig, GPIO.OUT)
+        GPIO.setup(self.__pEcho, GPIO.IN)
 
     def detect(self, m=None, b=None, v=True):
         # set Trigger to HIGH 
-        GPIO.output(self.pTrig, True) 
+        GPIO.output(self.__pTrig, True) 
         # set Trigger after 0.01ms to LOW 
         time.sleep(0.00001) 
-        GPIO.output(self.pTrig, False)
+        GPIO.output(self.__pTrig, False)
 
         startTime = time.time() 
         stopTime = time.time()
 
         # save start time 
-        while 0 == GPIO.input(self.pEcho): 
+        while 0 == GPIO.input(self.__pEcho): 
             startTime = time.time()
         # save time of arrival 
-        while 1 == GPIO.input(self.pEcho): 
+        while 1 == GPIO.input(self.__pEcho): 
             stopTime = time.time()
         # time difference between start and arrival 
         TimeElapsed = stopTime - startTime 

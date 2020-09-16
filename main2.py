@@ -17,12 +17,12 @@ from ui_functions import *
 try:
     import RPi.GPIO as gpio
     on_RPi = True
-    import raspi_function as rpi
     print("work on raspberry pi")
 except (ImportError, RuntimeError):
     on_RPi = False
 
 from utils.vision_helper import draw_box_name
+import raspi_function as rpi
 
 import cv2
 import time
@@ -50,12 +50,12 @@ class MainWindow(QMainWindow):
 
         # input operation
         self.streamTimer = QTimer()
-        self.streamTimer.start(2)
+        self.streamTimer.start(20)
         self.streamTimer.timeout.connect(self.processing_sensors)
 
         # output operation
         self.streamTimer = QTimer()
-        self.streamTimer.start(2)
+        self.streamTimer.start(20)
         self.streamTimer.timeout.connect(self.processing_output)
 
 
@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
-            rpi.Open_status
+            # rpi.Open_status
             bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)

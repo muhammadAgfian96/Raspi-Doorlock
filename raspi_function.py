@@ -9,7 +9,7 @@ from datetime import datetime
 import zmq
 from easydict import EasyDict as edict
 from utils import sensors
-from utils.MFRC522.Read import read_card as RFID_read
+# from utils.MFRC522.Read import read_card as RFID_read
 
 import json
 import time
@@ -68,6 +68,7 @@ Open_status = False
 count_close = 0
 old_time = time.time()
 first_time = True
+first_time_jarak = True
 start_time = time.time()
 
 def display(pesan):
@@ -148,14 +149,18 @@ def main_input():
     
     # ---- sensor jarak
     if s_jarak.detect(v=True) < 7:
-        if time.time() - start_time < 3:
+        if first_time_jarak:
+            start_time_jarak = time.time()
+            first_time_jarak = False
+
+        if time.time() - start_time_jarak < 3:
             signal_open += 1
             time.sleep(0.2)
-        else:
-            signal_open = 0
+
     if signal_open == 2 :
         signal_open = 0
         Open_status = True
+        first_time_jarak = True
 
     # ---- RFID
 
