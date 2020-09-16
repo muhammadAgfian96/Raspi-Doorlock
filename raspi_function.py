@@ -164,7 +164,7 @@ def main_input():
         signal_open = 0
         Open_status = True
         first_time_jarak = True
-
+    print("[sensors]", Open_status)
     # ---- RFID
 
 
@@ -185,3 +185,4 @@ def main_output():
             print("[locked] magnet on")
             Open_status = False
             first_time = True
+    print("[Actuators]", Open_status)

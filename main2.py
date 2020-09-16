@@ -44,26 +44,26 @@ class MainWindow(QMainWindow):
 
 
         # vision opetarion
-        self.streamTimer = QTimer()
-        self.streamTimer.start(20)
-        self.streamTimer.timeout.connect(self.stream_camera_on)
+        self.streamCamera = QTimer()
+        self.streamCamera.start(20)
+        self.streamCamera.timeout.connect(self.stream_camera_on)
 
         # input operation
-        self.streamTimer = QTimer()
-        self.streamTimer.start(20)
-        self.streamTimer.timeout.connect(self.processing_sensors)
+        self.streamSensors = QTimer()
+        self.streamSensors.start(2)
+        self.streamSensors.timeout.connect(self.processing_sensors)
 
         # output operation
-        self.streamTimer = QTimer()
-        self.streamTimer.start(20)
-        self.streamTimer.timeout.connect(self.processing_output)
+        self.streamActuators = QTimer()
+        self.streamActuators.start(2)
+        self.streamActuators.timeout.connect(self.processing_output)
 
 
         # for update time on display
-        self.showtimeTimer = QTimer()
-        self.showtimeTimer.setInterval(1000)
-        self.showtimeTimer.timeout.connect(self.showTime)
-        self.showtimeTimer.start()
+        self.streamDate = QTimer()
+        self.streamDate.setInterval(1000)
+        self.streamDate.timeout.connect(self.showTime)
+        self.streamDate.start()
 
         # MOVE WINDOW
         def moveWindow(event):
