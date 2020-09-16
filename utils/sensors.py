@@ -2,19 +2,19 @@ import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
 
 class PushButton():
-	def __init__(self, pin_tombol):
-		self.__pin_tombol = pin_tombol
-		GPIO.setup(self.__pin_tombol, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    def __init__(self, pin_tombol):
+        self.__pin_tombol = pin_tombol
+        GPIO.setup(self.__pin_tombol, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     @property
-	def isPressed(self):
+    def isPressed(self):
         """
         know condition push button
         """
-		if GPIO.input(self.__pin_tombol) == GPIO.LOW:
-			return True
-		else:
-			return False
+        if GPIO.input(self.__pin_tombol) == GPIO.LOW:
+            return True
+        else:
+            return False
 
 class Relay():
     def __init__(self, pin_relay, name="default"):
@@ -35,44 +35,44 @@ class Relay():
 
 
 class BeepBuzzer():
-	def __init__(self, pin_buzzer):
-		self.__pin_buzzer = pin_buzzer
-		GPIO.setup(self.__pin_buzzer, GPIO.OUT, initial=GPIO.LOW)
+    def __init__(self, pin_buzzer):
+        self.__pin_buzzer = pin_buzzer
+        GPIO.setup(self.__pin_buzzer, GPIO.OUT, initial=GPIO.LOW)
 
-	def on(self, duration=0.1, v=False):
-		GPIO.output(self.__pin_buzzer, GPIO.HIGH)
-		if v:
-			print("beep ON selama "+ str(waktu)+" s")
-		time.sleep(duration)
+    def on(self, duration=0.1, v=False):
+        GPIO.output(self.__pin_buzzer, GPIO.HIGH)
+        if v:
+            print("beep ON selama "+ str(waktu)+" s")
+        time.sleep(duration)
 
-	def off(self, duration=0.0, v=False):
-		GPIO.output(self.__pin_buzzer, GPIO.LOW)
-		if v:
-			print("beep OFF selama "+ str(waktu)+" s")
-		time.sleep(duration)
+    def off(self, duration=0.0, v=False):
+        GPIO.output(self.__pin_buzzer, GPIO.LOW)
+        if v:
+            print("beep OFF selama "+ str(waktu)+" s")
+        time.sleep(duration)
 
 class Jarak():
     def __init__(self, pinTrig, pinEcho):
-        self.__pTrig = pinTrig
-        self.__pEcho = pinEcho
+        self.pTrig = pinTrig
+        self.pEcho = pinEcho
         GPIO.setup(self.pTrig, GPIO.OUT)
         GPIO.setup(self.pEcho, GPIO.IN)
 
-    def detect(self, m=None, b=None):
+    def detect(self, m=None, b=None, v=True):
         # set Trigger to HIGH 
-        GPIO.output(self.__pTrig, True) 
+        GPIO.output(self.pTrig, True) 
         # set Trigger after 0.01ms to LOW 
         time.sleep(0.00001) 
-        GPIO.output(self.__pTrig, False)
+        GPIO.output(self.pTrig, False)
 
         startTime = time.time() 
         stopTime = time.time()
 
         # save start time 
-        while 0 == GPIO.input(self.__pEcho): 
+        while 0 == GPIO.input(self.pEcho): 
             startTime = time.time()
         # save time of arrival 
-        while 1 == GPIO.input(self.__pEcho): 
+        while 1 == GPIO.input(self.pEcho): 
             stopTime = time.time()
         # time difference between start and arrival 
         TimeElapsed = stopTime - startTime 
@@ -82,6 +82,7 @@ class Jarak():
         if (m!=None and b!=None):
             # faktor regresi linear
             distance = m*distance+b
-
+        if v:
+            print("[s_jarak]", distance, " cm")
         return distance
 

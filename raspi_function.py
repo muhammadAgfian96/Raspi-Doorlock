@@ -133,9 +133,6 @@ def main_vision():
     except zmq.Again as e:
         # print("-- no received")
         pred_bbox = None
-
-
-    
         
     if pred_bbox is None:
         return None, None
@@ -150,7 +147,7 @@ def main_input():
         Open_status = True
     
     # ---- sensor jarak
-    if s_jarak.detect < 7:
+    if s_jarak.detect(v=True) < 7:
         if time.time() - start_time < 3:
             signal_open += 1
             time.sleep(0.2)

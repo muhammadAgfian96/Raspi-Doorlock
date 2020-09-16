@@ -18,6 +18,7 @@ try:
     import RPi.GPIO as gpio
     on_RPi = True
     import raspi_function as rpi
+    print("work on raspberry pi")
 except (ImportError, RuntimeError):
     on_RPi = False
 
@@ -113,7 +114,7 @@ class MainWindow(QMainWindow):
         # ------- Function for Doorlock --------
         if on_RPi:
             rpi.Open_status
-            bbox, pred_name = rpi.main()
+            bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
                 draw_box_name(bbox, pred_name, image)
@@ -126,14 +127,15 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
         
-    def processing_sensors():
-        rpi.main_input()
-        pass
+    def processing_sensors(self):
+        if on_RPi:
+            rpi.main_input()
+        
 
-    def processing_output():
-        rpi.main_output()
-        pass
-
+    def processing_output(self):
+        if on_RPi:
+            rpi.main_output()
+        
 
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%H:%M"))
