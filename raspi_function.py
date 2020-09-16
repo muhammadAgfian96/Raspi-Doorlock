@@ -9,6 +9,8 @@ from datetime import datetime
 import zmq
 from easydict import EasyDict as edict
 from utils import sensors
+from utils.MFRC522.Read import read_card as RFID_read
+
 import json
 import time
 from time import sleep     # Import the sleep function from the time module
@@ -38,7 +40,7 @@ p_SCL_THERM    = 5
 #------- init pin
 exit_btn = sensors.PushButton(p_exit_btn)
 beep     = sensors.BeepBuzzer(p_buzzer)
-distance = sensors.Jarak(p_trig_jarak, p_echo_jarak)
+s_jarak  = sensors.Jarak(p_trig_jarak, p_echo_jarak)
 relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
 
@@ -111,7 +113,7 @@ def rcvMsgJSON():
     print("JSON data:\n", type(data), data)
     return data.name, data.bbox
     
-def main():
+def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global Open_status, old_time, first_time, start_time
     try:
@@ -124,8 +126,8 @@ def main():
             Open_status = False
             display("Silakan Hubungi Petugas")
 
-        elif pred_name != "unknown":
-            print("Silahkan Masuk!")
+        elif pred_name.lower() != "unknown":
+            print(f"Silahkan Masuk {pred_name}!")
             Open_status = True
 
     except zmq.Again as e:
@@ -133,6 +135,35 @@ def main():
         pred_bbox = None
 
 
+    
+        
+    if pred_bbox is None:
+        return None, None
+    else:
+        return pred_bbox, pred_name
+        
+
+def main_input():
+    # ---- exit button
+    if exit_btn.isPressed:
+        time.sleep(0.2)
+        Open_status = True
+    
+    # ---- sensor jarak
+    if s_jarak.detect < 7:
+        if time.time() - start_time < 3:
+            signal_open += 1
+            time.sleep(0.2)
+        else:
+            signal_open = 0
+    if signal_open == 2 :
+        signal_open = 0
+        Open_status = True
+
+    # ---- RFID
+    
+
+def main_output():
     # Jika Pintu Tebuka
     if Open_status == True:
         if first_time == True:
@@ -144,14 +175,7 @@ def main():
             print("[unlocked] magnet still off ", time.time() - start_time)
             
         if time.time() - start_time >= 3:
-            # magnet_on()
             relay_magnet.on(v=True)
             print("[locked] magnet on")
             Open_status = False
             first_time = True
-        
-    if pred_bbox is None:
-        return None, None
-    else:
-        return pred_bbox, pred_name
-        

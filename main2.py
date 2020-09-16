@@ -40,11 +40,23 @@ class MainWindow(QMainWindow):
         path_cam1 = 'http://11.11.11.12:8555' 
         self.cap = cv2.VideoCapture(path_cam1)
         time.sleep(1)
-        # create a timer
+
+
+        # vision opetarion
         self.streamTimer = QTimer()
         self.streamTimer.start(20)
-        # set timer timeout callback function
         self.streamTimer.timeout.connect(self.stream_camera_on)
+
+        # input operation
+        self.streamTimer = QTimer()
+        self.streamTimer.start(2)
+        self.streamTimer.timeout.connect(self.processing_sensors)
+
+        # output operation
+        self.streamTimer = QTimer()
+        self.streamTimer.start(2)
+        self.streamTimer.timeout.connect(self.processing_output)
+
 
         # for update time on display
         self.showtimeTimer = QTimer()
@@ -114,7 +126,13 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
         
+    def processing_sensors():
+        rpi.main_input()
+        pass
 
+    def processing_output():
+        rpi.main_output()
+        pass
 
 
     def showTime(self):
