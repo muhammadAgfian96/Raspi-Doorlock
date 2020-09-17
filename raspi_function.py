@@ -76,6 +76,7 @@ first_time = True
 first_time_jarak = True
 start_time = time.time()
 signal_open = 0
+door_time = time.time()
 
 def display(pesan):
     pass
@@ -131,12 +132,12 @@ def main_vision():
         if pred_name.lower() == "unknown":
             #socket.send(b"High")
             print("Unknown, Not Open")
-            Open_status = False
+            open_status_face = False
             display("Silakan Hubungi Petugas")
 
         elif pred_name.lower() != "unknown":
             print(f"Silahkan Masuk {pred_name}!")
-            Open_status = True
+            open_status_face = True
 
     except zmq.Again as e:
         # print("-- no received")
@@ -155,9 +156,8 @@ def main_input():
 
     # ---- exit button
     if exit_btn.isPressed:
-        time.sleep(0.2)
+        time.sleep(0.5)
         open_status_button = True
-        # print("[sensors] button pressed")
     
     # ---- sensor jarak
     jarak_object =  s_jarak.detect(v=True)
@@ -176,7 +176,8 @@ def main_input():
 
 def main_output():
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
-
+    global first_time, door_time
+    
     hasil = open_status_face or open_status_button or open_status_RFID or open_status_sJarak
     # Jika Pintu Tebuka
     if hasil ==  True:
@@ -190,17 +191,16 @@ def main_output():
             print('[ON] by RFID')
 
         if first_time == True:
-            start_time = time.time()
+            door_time = time.time()
             first_time = False
             print("get first time")
             
         else:
-            relay_magnet.off(v=True)
-            print("[unlocked] magnet still off ", time.time() - start_time)
-            
-        if time.time() - start_time >= 3:
-            relay_magnet.on(v=True)
-            print("[locked] magnet on")
-            open_status_face = open_status_button = open_status_RFID = open_status_sJarak =False
-            first_time = True
-    print("[Actuators] The Door is Open? ", Open_status)
+            if time.time() - door_time >= 3:
+                relay_magnet.on(v=True) # open the door
+                open_status_face = open_status_button = open_status_RFID = open_status_sJarak =False
+                first_time = True
+            else:
+                relay_magnet.off(v=True)
+                
+    print("[Actuators] The Door is Open? ", hasil)

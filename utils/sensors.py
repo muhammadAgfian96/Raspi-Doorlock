@@ -12,10 +12,10 @@ class PushButton():
         know condition push
         """
         if GPIO.input(self.__pin_tombol):
-            print('button HIGH')
+            #print('button HIGH')
             return True
         else:
-            print('button LOW')
+            #print('button LOW')
             return False
         
 class Relay():
@@ -74,13 +74,13 @@ class Jarak():
         runTimeStart = time.time()
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
-            if timeStartJarak - runTimeStart < 3:
+            if timeStartJarak - runTimeStart > 3:
                 print('[Error Sensors] Timeout 0 Jarak!')
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
             timeStopJarak = time.time()
-            if timeStopJarak - runTimeStart < 3:
+            if timeStopJarak - runTimeStart > 3:
                 print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
         # time difference between start and arrival 
@@ -92,5 +92,5 @@ class Jarak():
             # faktor regresi linear
             distance = m*distance+b
         if v:
-            print("[s_jarak]", distance, " cm")
+            print("[s_jarak] {:.2f} cm".format(distance))
         return distance
