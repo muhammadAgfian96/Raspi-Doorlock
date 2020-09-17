@@ -11,7 +11,7 @@ class PushButton():
         """
         know condition push button
         """
-        if GPIO.input(self.__pin_tombol) == GPIO.LOW:
+        if GPIO.input(self.__pin_tombol) == GPIO.HIGH:
             return True
         else:
             return False
@@ -65,11 +65,11 @@ class Jarak():
         time.sleep(0.00001) 
         GPIO.output(self.__pTrig, False)
 
-        startTime = time.time() 
-        stopTime = time.time()
+        #startTime = time.time() 
+        #stopTime = time.time()
 
         # save start time 
-        while 0 == GPIO.input(self.__pEcho): 
+        while 0 == GPIO.input(self.__pEcho):
             startTime = time.time()
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
@@ -85,4 +85,3 @@ class Jarak():
         if v:
             print("[s_jarak]", distance, " cm")
         return distance
-

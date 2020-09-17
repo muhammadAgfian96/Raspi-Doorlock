@@ -50,13 +50,13 @@ class MainWindow(QMainWindow):
 
         # input operation
         self.streamSensors = QTimer()
-        self.streamSensors.start(2)
+        self.streamSensors.start(5)
         self.streamSensors.timeout.connect(self.processing_sensors)
 
         # output operation
-        self.streamActuators = QTimer()
-        self.streamActuators.start(2)
-        self.streamActuators.timeout.connect(self.processing_output)
+        #self.streamActuators = QTimer()
+        #self.streamActuators.start(5)
+        #self.streamActuators.timeout.connect(self.processing_output)
 
 
         # for update time on display
@@ -132,9 +132,9 @@ class MainWindow(QMainWindow):
             rpi.main_input()
         
 
-    def processing_output(self):
-        if on_RPi:
-            rpi.main_output()
+    #def processing_output(self):
+    #    if on_RPi:
+    #        rpi.main_output()
         
 
     def showTime(self):

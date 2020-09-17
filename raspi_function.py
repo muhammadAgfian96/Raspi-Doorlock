@@ -135,7 +135,8 @@ def main_vision():
     except zmq.Again as e:
         # print("-- no received")
         pred_bbox = None
-        
+    
+    main_output()
     if pred_bbox is None:
         return None, None
     else:
@@ -143,39 +144,38 @@ def main_vision():
         
 
 def main_input():
-    global Open_status, first_time_jarak, signal_open
+    global Open_status, first_time_jarak, signal_open, start_time_jarak
 
     # ---- exit button
     if exit_btn.isPressed:
         time.sleep(0.2)
         Open_status = True
+        print("[sensors] button pressed")
     
     # ---- sensor jarak
-    if s_jarak.detect(v=True) < 7:
-        if first_time_jarak:
-            start_time_jarak = time.time()
-            first_time_jarak = False
-
-        if time.time() - start_time_jarak < 3:
+    jarak_object =  s_jarak.detect(v=True)
+    if  jarak_object < 7:
             signal_open += 1
             time.sleep(0.2)
 
-    if signal_open == 2 :
+    if signal_open == 5 :
         signal_open = 0
         Open_status = True
         first_time_jarak = True
-    print("[sensors]", Open_status)
+        print("[sensors] signal open")
+    print("[sensors] Openstatus ", Open_status)
     # ---- RFID
 
 
 def main_output():
-    global Open_status, first_time, old_time
+    global Open_status, first_time, start_time, start_time_jarak
     # Jika Pintu Tebuka
     if Open_status ==  True:
         if first_time == True:
             start_time = time.time()
             first_time = False
             print("get first time")
+            
         else:
             relay_magnet.off(v=True)
             print("[unlocked] magnet still off ", time.time() - start_time)
@@ -185,4 +185,4 @@ def main_output():
             print("[locked] magnet on")
             Open_status = False
             first_time = True
-    print("[Actuators]", Open_status)
+    print("[Actuators] Openstatus ", Open_status)
