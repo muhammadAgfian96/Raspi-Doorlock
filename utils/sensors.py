@@ -5,17 +5,19 @@ class PushButton():
     def __init__(self, pin_tombol):
         self.__pin_tombol = pin_tombol
         GPIO.setup(self.__pin_tombol, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
+        
     @property
     def isPressed(self):
         """
-        know condition push button
+        know condition push
         """
-        if GPIO.input(self.__pin_tombol) == GPIO.HIGH:
+        if GPIO.input(self.__pin_tombol):
+            print('button HIGH')
             return True
         else:
+            print('button LOW')
             return False
-
+        
 class Relay():
     def __init__(self, pin_relay, name="default"):
         self.__pin_relay = pin_relay
@@ -68,14 +70,21 @@ class Jarak():
         #startTime = time.time() 
         #stopTime = time.time()
 
-        # save start time 
+        # save start time
+        runTimeStart = time.time()
         while 0 == GPIO.input(self.__pEcho):
-            startTime = time.time()
+            timeStartJarak = time.time()
+            if timeStartJarak - runTimeStart < 3:
+                print('Timeout 0 Jarak!')
+                return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
-            stopTime = time.time()
+            timeStopJarak = time.time()
+            if timeStopJarak - runTimeStart < 3:
+                print('Timeout 1 Jarak!')
+                return 60
         # time difference between start and arrival 
-        TimeElapsed = stopTime - startTime 
+        TimeElapsed = timeStopJarak - timeStartJarak 
         # multiply with the sonic speed (34300 cm/s) 
         # and divide by 2, because there and back 
         distance = (TimeElapsed * 34300) / 2
