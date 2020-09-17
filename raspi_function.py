@@ -64,7 +64,12 @@ socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
 socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
 
 #------- state
-Open_status = False
+open_status_face = False
+open_status_button = False
+open_status_sJarak = False
+open_status_RFID = False
+
+
 count_close = 0
 old_time = time.time()
 first_time = True
@@ -117,7 +122,8 @@ def rcvMsgJSON():
     
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
-    global Open_status, old_time, first_time, start_time
+    global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
+    global old_time, first_time, start_time
     try:
         pred_name, pred_bbox  = rcvMsgJSON()
         print(pred_name, pred_bbox)
@@ -145,12 +151,13 @@ def main_vision():
 
 def main_input():
     global Open_status, first_time_jarak, signal_open, start_time_jarak
+    global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
 
     # ---- exit button
     if exit_btn.isPressed:
         time.sleep(0.2)
-        Open_status = True
-        print("[sensors] button pressed")
+        open_status_button = True
+        # print("[sensors] button pressed")
     
     # ---- sensor jarak
     jarak_object =  s_jarak.detect(v=True)
@@ -160,17 +167,28 @@ def main_input():
 
     if signal_open == 5 :
         signal_open = 0
-        Open_status = True
+        open_status_sJarak = True
         first_time_jarak = True
-        print("[sensors] signal open")
-    print("[sensors] Openstatus ", Open_status)
+        # print("[sensors] signal open")
+    # print("[sensors] Openstatus ", Open_status)
     # ---- RFID
 
 
 def main_output():
-    global Open_status, first_time, start_time, start_time_jarak
+    global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
+
+    hasil = open_status_face or open_status_button or open_status_RFID or open_status_sJarak
     # Jika Pintu Tebuka
-    if Open_status ==  True:
+    if hasil ==  True:
+        if open_status_face:
+            print('[ON] by FACE')
+        if open_status_sJarak:
+            print('[ON] by s JARAK')
+        if open_status_button:
+            print('[ON] by BUTTON')
+        if open_status_RFID:
+            print('[ON] by RFID')
+
         if first_time == True:
             start_time = time.time()
             first_time = False
@@ -183,6 +201,6 @@ def main_output():
         if time.time() - start_time >= 3:
             relay_magnet.on(v=True)
             print("[locked] magnet on")
-            Open_status = False
+            open_status_face = open_status_button = open_status_RFID = open_status_sJarak =False
             first_time = True
-    print("[Actuators] Openstatus ", Open_status)
+    print("[Actuators] The Door is Open? ", Open_status)

@@ -75,13 +75,13 @@ class Jarak():
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
             if timeStartJarak - runTimeStart < 3:
-                print('Timeout 0 Jarak!')
+                print('[Error Sensors] Timeout 0 Jarak!')
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
             timeStopJarak = time.time()
             if timeStopJarak - runTimeStart < 3:
-                print('Timeout 1 Jarak!')
+                print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
         # time difference between start and arrival 
         TimeElapsed = timeStopJarak - timeStartJarak 
