@@ -1,7 +1,6 @@
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
-import MFRC522
-
+from RFIDcard.MFRC522 import MFRC522
 
 class PushButton():
     def __init__(self, pin_tombol):
@@ -99,7 +98,7 @@ class Jarak():
 
 class Card(MFRC522):
     def __init__(self, dev_spi = '/dev/spidev1.2'):
-        self.__MIFAREReader = MFRC522.MFRC522(dev = dev_spi)
+        self.__MIFAREReader = MFRC522(dev = dev_spi)
 
     def read_card(self):
         # Scan for cards    
