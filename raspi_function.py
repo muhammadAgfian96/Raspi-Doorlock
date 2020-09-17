@@ -37,13 +37,13 @@ p_SDA_THERM    = 3  # ---- Thermal Cam
 p_SCL_THERM    = 5
 
 
-#------- init pin
+#------- init pin and Sensors
 exit_btn = sensors.PushButton(p_exit_btn)
 beep     = sensors.BeepBuzzer(p_buzzer)
 s_jarak  = sensors.Jarak(p_trig_jarak, p_echo_jarak)
 relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
-
+my_card = sensors.Card()
 
 #------- GET FROM SERVER
 addr_server = "tcp://11.11.11.11:5556"
@@ -172,6 +172,8 @@ def main_input():
         # print("[sensors] signal open")
     # print("[sensors] Openstatus ", Open_status)
     # ---- RFID
+    uid = my_card.read_card()
+    print(uid)
 
 
 def main_output():

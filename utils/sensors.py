@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
+import MFRC522
+
 
 class PushButton():
     def __init__(self, pin_tombol):
@@ -74,13 +76,13 @@ class Jarak():
         runTimeStart = time.time()
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
-            if timeStartJarak - runTimeStart > 3:
+            if timeStartJarak - runTimeStart > 1.5:
                 print('[Error Sensors] Timeout 0 Jarak!')
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
             timeStopJarak = time.time()
-            if timeStopJarak - runTimeStart > 3:
+            if timeStopJarak - runTimeStart > 1.5:
                 print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
         # time difference between start and arrival 
@@ -94,3 +96,44 @@ class Jarak():
         if v:
             print("[s_jarak] {:.2f} cm".format(distance))
         return distance
+
+class Card(MFRC522):
+    def __init__(self, dev_spi = '/dev/spidev1.2'):
+        self.__MIFAREReader = MFRC522.MFRC522(dev = dev_spi)
+
+    def read_card(self):
+        # Scan for cards    
+        (status,TagType) = self.__MIFAREReader.MFRC522_Request(self.__MIFAREReader.PICC_REQIDL)
+
+        # If a card is found
+        if status == self.__MIFAREReader.MI_OK:
+            print("Card detected")
+        
+        # Get the UID of the card
+        (status,uid) = self.__MIFAREReader.MFRC522_Anticoll()
+        print(status, uid)
+        # If we have the UID, continue
+        if status == self.__MIFAREReader.MI_OK:
+
+            # Print UID
+            print("Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
+        
+            # This is the default key for authentication
+            key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            
+            # Select the scanned tag
+            self.__MIFAREReader.MFRC522_SelectTag(uid)
+
+            # Authenticate
+            status = self.__MIFAREReader.MFRC522_Auth(self.__MIFAREReader.PICC_AUTHENT1A, 8, key, uid)
+
+            # Check if authenticated
+            if status == self.__MIFAREReader.MI_OK:
+                self.__MIFAREReader.MFRC522_Read(8)
+                self.__MIFAREReader.MFRC522_StopCrypto1()
+            else:
+                print("Authentication error")
+            
+            return "%s%s%s%s" % (uid[0], uid[1], uid[2], uid[3])
+        else:
+            return None
