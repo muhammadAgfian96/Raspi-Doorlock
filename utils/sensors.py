@@ -1,7 +1,6 @@
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
 from utils.RFIDcard.MFRC522 import MFRC522
-<<<<<<< HEAD
 
 from utils.ThermCAM.SeedAMG8833 import AMG8833
 import numpy as np
@@ -11,8 +10,6 @@ from colour import Color
 
 
 
-=======
->>>>>>> c7ac23ad16a5e0f1d0e3a68087d4422835e9a82d
 
 class PushButton():
     def __init__(self, pin_tombol):
