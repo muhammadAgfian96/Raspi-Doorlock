@@ -173,7 +173,7 @@ class CamTherm(AMG8833):
         pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels]
 
         #perdorm interpolation
-        bicubic = griddata(self._points, pixels, (grid_x, grid_y), method='cubic')
+        bicubic = griddata(self._points, pixels, (self._grid_x, self._grid_y), method='cubic')
 
         #--- proses kalibrasi
 
