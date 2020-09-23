@@ -160,7 +160,7 @@ class CamTherm(AMG8833):
         self._COLORDEPTH = 1024
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
         self._blue = Color("indigo")
-        self._colors = list(self._blue.range_to(Color("red"), COLORDEPTH))
+        self._colors = list(self._blue.range_to(Color("red"), self._COLORDEPTH))
 
         self._colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in self._colors]
 
