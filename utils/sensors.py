@@ -1,6 +1,15 @@
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
-from RFIDcard.MFRC522 import MFRC522
+from utils.RFIDcard.MFRC522 import MFRC522
+
+from utils.ThermCAM.SeedAMG8833 import AMG8833
+import numpy as np
+from scipy.interpolate import griddata
+import math
+from colour import Color
+
+
+
 
 class PushButton():
     def __init__(self, pin_tombol):
@@ -34,8 +43,6 @@ class Relay():
         GPIO.output(self.__pin_relay, GPIO.HIGH)
         if v:
             print(f"Relay {self.__name_relay} GPIO.HIGH")
-
-
 
 class BeepBuzzer():
     def __init__(self, pin_buzzer):
@@ -136,3 +143,44 @@ class Card(MFRC522):
             return "%s%s%s%s" % (uid[0], uid[1], uid[2], uid[3])
         else:
             return None
+
+class CamTherm(AMG8833):
+    def __init__(self, alamat, ukuran_pix=120j, minTemp=30, maxTemp=38):
+        self._cam = AMG8833(addr=alamat)
+        self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
+        self._ukuran = ukuran_pix
+        self._grid_x, self._grid_y = np.mgrid[0:7:ukuran, 0:7:ukuran]
+        #low range of the sensor (this will be blue on the screen)
+        self._MINTEMP = minTemp
+
+        #high range of the sensor (this will be red on the screen)
+        self._MAXTEMP = 31
+
+        #how many color values we can have
+        self._COLORDEPTH = 1024
+
+    #some utility functions
+    def _constrain(self, val, min_val, max_val):
+        return min(max_val, max(min_val, val))
+
+    def _map(self, x, in_min, in_max, out_min, out_max):
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+    def getThermal(self,):
+        pixels = self._cam.read_temp()
+        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels]
+
+        #perdorm interpolation
+        bicubic = griddata(points, pixels, (grid_x, grid_y), method='cubic')
+
+        #--- proses kalibrasi
+
+        #draw everything
+        data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
+        for ix, row in enumerate(bicubic):
+            for jx, pixel in enumerate(row):
+                r,g,b = colors[self._constrain(int(pixel), 0, COLORDEPTH- 1)]
+                data_img[jx,ix] = [r,g,b]
+        # pygame.display.update()
+        data_img = np.rot90(data_img, k=1)
+        return data_img

@@ -1,4 +1,11 @@
 __pycache__
-utils/Seeed_AMG8833_Raspberry_Python/testSensor.ipynb
-utils/Seeed_AMG8833_Raspberry_Python/testSensor2.ipynb
-utils/Seeed_AMG8833_Raspberry_Python/.ipynb_checkpoints
+utils/ThermCAM/thermalCam.ipynb
+utils/ThermCAM/testSensor2.ipynb
+utils/ThermCAM/testSensor.ipynb
+utils/ThermCAM/test.jpg
+utils/ThermCAM/README.md
+utils/ThermCAM/.ipynb_checkpoints
+utils/ThermCAM/__pycache__
+utils/ThermCAM/haha2.csv
+utils/ThermCAM/haha.csv
+utils/ThermCAM/data_therm.py
