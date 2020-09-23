@@ -158,7 +158,7 @@ class CamTherm(AMG8833):
 
         #how many color values we can have
         self._COLORDEPTH = 1024
-	self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
+        self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
 
 
 	#some utility functions
@@ -173,7 +173,7 @@ class CamTherm(AMG8833):
         pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels]
 
         #perdorm interpolation
-	bicubic = griddata(self._points, pixels, (grid_x, grid_y), method='cubic')
+        bicubic = griddata(self._points, pixels, (grid_x, grid_y), method='cubic')
 
         #--- proses kalibrasi
 
