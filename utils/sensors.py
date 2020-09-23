@@ -159,6 +159,11 @@ class CamTherm(AMG8833):
         #how many color values we can have
         self._COLORDEPTH = 1024
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
+        self._blue = Color("indigo")
+        self._colors = list(self._blue.range_to(Color("red"), COLORDEPTH))
+
+        self._colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in self._colors]
+
 
 
 	#some utility functions
@@ -181,7 +186,7 @@ class CamTherm(AMG8833):
         data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
         for ix, row in enumerate(bicubic):
             for jx, pixel in enumerate(row):
-                r,g,b = colors[self._constrain(int(pixel), 0, COLORDEPTH- 1)]
+                r,g,b = self._colors[self._constrain(int(pixel), 0, COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
         # pygame.display.update()
         data_img = np.rot90(data_img, k=1)
