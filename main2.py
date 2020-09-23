@@ -110,15 +110,28 @@ class MainWindow(QMainWindow):
                         (w_1-constant_val, h_1-constant_val), 
                         (w_1+constant_val, h_1+constant_val), 
                         (255,0,0), thickness=3)
+        
+
 
         # ------- Function for Doorlock --------
         if on_RPi:
             # rpi.Open_status
-            bbox, pred_name = rpi.main_vision()
+            bbox, pred_name, arrayTherm = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
                 draw_box_name(bbox, pred_name, image)
-                
+        
+        # -- overlay thermal
+        y_offset=image.shape[0]-arrayTherm.shape[0]
+        x_offset=0
+        # print(image.shape, )
+
+        alpha = 0.5
+        output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+        cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+
+
+        image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         # get image infos
         height, width, channel = image.shape
         step = channel * width

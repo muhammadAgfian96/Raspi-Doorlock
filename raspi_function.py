@@ -44,6 +44,7 @@ s_jarak  = sensors.Jarak(p_trig_jarak, p_echo_jarak)
 relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
 my_card = sensors.Card()
+thermalCam = sensors.CamTherm(alamat=0x68)
 
 #------- GET FROM SERVER
 addr_server = "tcp://11.11.11.11:5556"
@@ -125,6 +126,7 @@ def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
     global old_time, first_time, start_time
+    arrayTherm = thermalCam.getThermal()
     try:
         pred_name, pred_bbox  = rcvMsgJSON()
         print(pred_name, pred_bbox)
@@ -145,9 +147,9 @@ def main_vision():
     
     main_output()
     if pred_bbox is None:
-        return None, None
+        return None, None, arrayTherm
     else:
-        return pred_bbox, pred_name
+        return pred_bbox, pred_name, arrayTherm
         
 
 def main_input():
