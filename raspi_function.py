@@ -172,8 +172,10 @@ def main_input():
         # print("[sensors] signal open")
     # print("[sensors] Openstatus ", Open_status)
     # ---- RFID
-    uid = my_card.read_card()
-    print(uid)
+    #uid = my_card.read_card()
+    #print(uid)
+    #if uid == "249108142":
+    #    open_status_RFID = True
 
 
 def main_output():
