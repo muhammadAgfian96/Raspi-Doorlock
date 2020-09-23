@@ -149,7 +149,7 @@ class CamTherm(AMG8833):
         self._cam = AMG8833(addr=alamat)
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
         self._ukuran = ukuran_pix
-        self._grid_x, self._grid_y = np.mgrid[0:7:ukuran, 0:7:ukuran]
+        self._grid_x, self._grid_y = np.mgrid[0:7:self._ukuran, 0:7:self._ukuran]
         #low range of the sensor (this will be blue on the screen)
         self._MINTEMP = minTemp
 
@@ -158,8 +158,10 @@ class CamTherm(AMG8833):
 
         #how many color values we can have
         self._COLORDEPTH = 1024
+	self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
 
-    #some utility functions
+
+	#some utility functions
     def _constrain(self, val, min_val, max_val):
         return min(max_val, max(min_val, val))
 
@@ -171,7 +173,7 @@ class CamTherm(AMG8833):
         pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels]
 
         #perdorm interpolation
-        bicubic = griddata(points, pixels, (grid_x, grid_y), method='cubic')
+	bicubic = griddata(self._points, pixels, (grid_x, grid_y), method='cubic')
 
         #--- proses kalibrasi
 

@@ -205,4 +205,4 @@ if __name__ == '__main__':
     device=get_i2c_device(0x69,v)
     device.write8(0x0c,0x0c)
     result=device.readU8(0x0c)
-    print result
+    print(result)

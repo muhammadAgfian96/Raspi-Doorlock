@@ -38,8 +38,8 @@ Implementation Notes
 """
 
 
-import driver
 import time
+import utils.ThermCAM.driver as driver
 
 PIXEL_NUM                           = 64
 DEFAULT_IIC_ADDR                    = 0X68
@@ -110,20 +110,21 @@ class AMG8833(object):
         buf = []
         for i in range(0, PIXEL_NUM):
             raw = self.device.readU16(TEMPERATURE_REG_ADDR_L + (i << 1))
-			
+            
             converted = self.twoCompl12(raw) * 0.25
             buf.append(converted)
 
         return buf
+    
     def twoCompl12(self, val):
-		if  0x7FF & val == val:
-			return float(val)
-		else:
-			return float(val-4096 )
+        if  (0x7FF & val) == val:
+            return float(val)
+        else:
+            return float(val-4096 )
 
 
 if __name__ == '__main__':
     sensor = AMG8833()
     time.sleep(0.5)
     buf=sensor.read_temp()
-    print buf
+    print (buf)
