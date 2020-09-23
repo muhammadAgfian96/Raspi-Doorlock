@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 import time
 from utils.RFIDcard.MFRC522 import MFRC522
+<<<<<<< HEAD
 
 from utils.ThermCAM.SeedAMG8833 import AMG8833
 import numpy as np
@@ -10,6 +11,8 @@ from colour import Color
 
 
 
+=======
+>>>>>>> c7ac23ad16a5e0f1d0e3a68087d4422835e9a82d
 
 class PushButton():
     def __init__(self, pin_tombol):
@@ -117,28 +120,28 @@ class Card(MFRC522):
         
         # Get the UID of the card
         (status,uid) = self.__MIFAREReader.MFRC522_Anticoll()
-        print(status, uid)
+        #print("[RFID] stats and id: ", status, uid)
         # If we have the UID, continue
         if status == self.__MIFAREReader.MI_OK:
 
             # Print UID
-            print("Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
+            print("[RFID] Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
         
             # This is the default key for authentication
-            key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
+            #key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
             
             # Select the scanned tag
-            self.__MIFAREReader.MFRC522_SelectTag(uid)
+            #self.__MIFAREReader.MFRC522_SelectTag(uid)
 
             # Authenticate
-            status = self.__MIFAREReader.MFRC522_Auth(self.__MIFAREReader.PICC_AUTHENT1A, 8, key, uid)
+            #status = self.__MIFAREReader.MFRC522_Auth(self.__MIFAREReader.PICC_AUTHENT1A, 8, key, uid)
 
             # Check if authenticated
-            if status == self.__MIFAREReader.MI_OK:
-                self.__MIFAREReader.MFRC522_Read(8)
-                self.__MIFAREReader.MFRC522_StopCrypto1()
-            else:
-                print("Authentication error")
+            #if status == self.__MIFAREReader.MI_OK:
+            #    self.__MIFAREReader.MFRC522_Read(8)
+            #    self.__MIFAREReader.MFRC522_StopCrypto1()
+            #else:
+            #    print("Authentication error")
             
             return "%s%s%s%s" % (uid[0], uid[1], uid[2], uid[3])
         else:
