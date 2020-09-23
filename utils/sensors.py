@@ -186,7 +186,7 @@ class CamTherm(AMG8833):
         data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
         for ix, row in enumerate(bicubic):
             for jx, pixel in enumerate(row):
-                r,g,b = self._colors[self._constrain(int(pixel), 0, COLORDEPTH- 1)]
+                r,g,b = self._colors[self._constrain(int(pixel), 0, self._COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
         # pygame.display.update()
         data_img = np.rot90(data_img, k=1)
