@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
         self.streamDate.setInterval(1000)
         self.streamDate.timeout.connect(self.showTime)
         self.streamDate.start()
+        self.count_FPS = 0
 
         # MOVE WINDOW
         def moveWindow(event):
@@ -91,7 +92,18 @@ class MainWindow(QMainWindow):
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
 
-    
+    def visionThermal(self,image):
+        arrayTherm = rpi.thermalCam()
+        # -------- overlay thermal ----------
+        y_offset=image.shape[0]-arrayTherm.shape[0]
+        x_offset=0
+
+        alpha = 0.5
+        output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+        cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+        image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+        return image
+
     def stream_camera_on(self):
         # read image in BGR format
         ret, image = self.cap.read()
@@ -103,35 +115,29 @@ class MainWindow(QMainWindow):
         # print(h_1, w_1)
         constant_val = 100
         # image = cv2.resize(image, (608,608))
-        cv2.putText(image, "Put Your Face Here in Box", 
-                    (w_1-constant_val, h_1-constant_val-5),
-                    cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
-        cv2.rectangle(image, 
-                        (w_1-constant_val, h_1-constant_val), 
-                        (w_1+constant_val, h_1+constant_val), 
-                        (255,0,0), thickness=3)
+        # cv2.putText(image, "Put Your Face Here in Box", 
+        #             (w_1-constant_val, h_1-constant_val-5),
+        #             cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
+        # cv2.rectangle(image, 
+        #                 (w_1-constant_val, h_1-constant_val), 
+        #                 (w_1+constant_val, h_1+constant_val), 
+        #                 (255,0,0), thickness=3)
         
 
 
         # ------- Function for Doorlock --------
         if on_RPi:
             # rpi.Open_status
-            bbox, pred_name, arrayTherm = rpi.main_vision()
+            bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
                 draw_box_name(bbox, pred_name, image)
-        
-        # -- overlay thermal
-        y_offset=image.shape[0]-arrayTherm.shape[0]
-        x_offset=0
-        # print(image.shape, )
 
-        alpha = 0.5
-        output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-        cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+        if self.count_FPS % 12 == 0 :
+            image = self.visionThermal(image)
+            self.count_FPS = 0
+        self.count_FPS+=1
 
-
-        image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         # get image infos
         height, width, channel = image.shape
         step = channel * width
@@ -140,6 +146,7 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
         
+
     def processing_sensors(self):
         if on_RPi:
             rpi.main_input()

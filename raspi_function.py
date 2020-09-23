@@ -122,11 +122,24 @@ def rcvMsgJSON():
     print("JSON data:\n", type(data), data)
     return data.name, data.bbox
     
+def getThermalArray():
+    arrayTherm = thermalCam.getThermal()
+# -------- overlay thermal ----------
+    y_offset=image.shape[0]-arrayTherm.shape[0]
+    x_offset=0
+    # print(image.shape, )
+
+    alpha = 0.5
+    output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+    cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+    image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+
+    return arrayTherm
+
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
     global old_time, first_time, start_time
-    arrayTherm = thermalCam.getThermal()
     try:
         pred_name, pred_bbox  = rcvMsgJSON()
         print(pred_name, pred_bbox)
@@ -147,9 +160,9 @@ def main_vision():
     
     main_output()
     if pred_bbox is None:
-        return None, None, arrayTherm
+        return None, None
     else:
-        return pred_bbox, pred_name, arrayTherm
+        return pred_bbox, pred_name
         
 
 def main_input():
