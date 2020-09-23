@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
         self.dragPos = event.globalPos()
 
     def visionThermal(self,image):
-        arrayTherm = rpi.thermalCam()
+        arrayTherm = rpi.thermalCam.getThermal()
         # -------- overlay thermal ----------
         y_offset=image.shape[0]-arrayTherm.shape[0]
         x_offset=0
