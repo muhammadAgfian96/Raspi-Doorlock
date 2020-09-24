@@ -154,6 +154,9 @@ class MainWindow(QMainWindow):
             
             self.count_FPS = 0
         else:
+            y_offset=image.shape[0]-arrayTherm.shape[0]
+            x_offset=0
+            
             output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
             cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
             image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
