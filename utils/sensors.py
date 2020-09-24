@@ -183,7 +183,7 @@ class CamTherm(AMG8833):
         factor_greater = pixels_2d[logical_greater] * (-0.014523) + 1.682925
         factor_minor = pixels_2d[logical_minor] * (-0.009277) + 1.215660
         
-        greater = pixels_2d[logical_greater] * 
+        greater = pixels_2d[logical_greater] * factor_greater
         minor = pixels_2d[logical_minor] * factor_minor
         
         pixels_2d[logical_greater] = greater
