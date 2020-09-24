@@ -1,6 +1,6 @@
 import sys
 import platform
-
+import numpy as np
 
 
 # GUI FILE
@@ -12,6 +12,8 @@ from ui_main2 import Ui_MainWindow
 
 # Raspi Sensors and Actuators
 from ui_functions import *
+
+
 
 
 try:
@@ -27,10 +29,15 @@ import raspi_function as rpi
 import cv2
 import time
 import datetime
+
+
+import threading
+
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
          'Nov', 'Dec']
 
+arrayTherm = np.zeros((240,240,3))
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -109,7 +116,7 @@ class MainWindow(QMainWindow):
         ret, image = self.cap.read()
         # convert image to RGB format
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        h_img, w_img, ch =image.shape
+        h_img, w_img, ch = image.shape
         h_1 = h_img//2
         w_1  = w_img//2
         # print(h_1, w_1)
@@ -133,9 +140,24 @@ class MainWindow(QMainWindow):
                 self.insert_list(pred_name)
                 draw_box_name(bbox, pred_name, image)
 
-        if self.count_FPS % 12 == 0 :
-            image = self.visionThermal(image)
+        if self.count_FPS % 20 == 0 :
+            arrayTherm = rpi.thermalCam.getThermal()
+
+            # -------- overlay thermal ----------
+            y_offset=image.shape[0]-arrayTherm.shape[0]
+            x_offset=0
+
+            alpha = 0.5
+            output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+            cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+            image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+            
             self.count_FPS = 0
+        else:
+            output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+            cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+            image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+            
         self.count_FPS+=1
 
         # get image infos
@@ -174,6 +196,8 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
+    # threadThermal = threading.Thread(target=MainWindow.visionThermal, args=image)
+    # threadThermal.start()
     if on_RPi:
         window.showFullScreen()
     sys.exit(app.exec_())
