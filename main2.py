@@ -57,9 +57,9 @@ class MainWindow(QMainWindow):
         self.streamCamera.timeout.connect(self.stream_camera_on)
 
         # input operation
-        # self.streamSensors = QTimer()
-        # self.streamSensors.start(5)
-        # self.streamSensors.timeout.connect(self.processing_sensors)
+        self.streamSensors = QTimer()
+        self.streamSensors.start(10)
+        self.streamSensors.timeout.connect(self.processing_sensors)
 
         # output operation
         #self.streamActuators = QTimer()
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
 
 
         if self.count_FPS % 5 == 0 :
-            arrayTherm,suhu = rpi.thermalCam.getThermal()
+            arrayTherm, suhu = rpi.thermalCam.getThermal()
 
             # -------- overlay thermal ----------
             y_offset=image.shape[0]-arrayTherm.shape[0]
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
             # rpi.Open_status
             bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
-                self.insert_list(pred_name+'-'+str(suhu))
+                self.insert_list(pred_name+' '+str(suhu)+'C*')
                 draw_box_name(bbox, pred_name, image)
 
 

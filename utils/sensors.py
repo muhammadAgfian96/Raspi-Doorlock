@@ -174,15 +174,15 @@ class CamTherm(AMG8833):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
     def getThermal(self,):
-        pixels = self._cam.read_temp()
-        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels]
+        pixels_origin = self._cam.read_temp()
+        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_origin]
 
         #perdorm interpolation
         bicubic = griddata(self._points, pixels, (self._grid_x, self._grid_y), method='cubic')
 
         #--- proses kalibrasi
-        suhu = np.max(bicubic)
-
+        suhu = np.max(pixels_origin)
+        print(suhu)
 
         #draw everything
         data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
