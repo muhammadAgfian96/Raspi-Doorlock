@@ -38,6 +38,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
          'Nov', 'Dec']
 
 arrayTherm = np.zeros((240,240,3))
+suhu = '0 C'
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -56,9 +57,9 @@ class MainWindow(QMainWindow):
         self.streamCamera.timeout.connect(self.stream_camera_on)
 
         # input operation
-        self.streamSensors = QTimer()
-        self.streamSensors.start(5)
-        self.streamSensors.timeout.connect(self.processing_sensors)
+        # self.streamSensors = QTimer()
+        # self.streamSensors.start(5)
+        # self.streamSensors.timeout.connect(self.processing_sensors)
 
         # output operation
         #self.streamActuators = QTimer()
@@ -112,7 +113,7 @@ class MainWindow(QMainWindow):
         return image
 
     def stream_camera_on(self):
-        global arrayTherm
+        global arrayTherm, suhu
 
         # read image in BGR format
         ret, image = self.cap.read()
@@ -134,17 +135,10 @@ class MainWindow(QMainWindow):
         
 
 
-        # ------- Function for Doorlock --------
-        if on_RPi:
-            # rpi.Open_status
-            bbox, pred_name = rpi.main_vision()
-            if bbox is not None and pred_name.lower() != "unknown":
-                self.insert_list(pred_name)
-                draw_box_name(bbox, pred_name, image)
 
-        if self.count_FPS % 20 == 0 :
+        if self.count_FPS % 5 == 0 :
             arrayTherm = rpi.thermalCam.getThermal()
-
+            arrayTherm = np.flip(arrayTherm, 1)
             # -------- overlay thermal ----------
             y_offset=image.shape[0]-arrayTherm.shape[0]
             x_offset=0
@@ -165,6 +159,15 @@ class MainWindow(QMainWindow):
             image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
             
         self.count_FPS+=1
+
+        # ------- Function for Doorlock --------
+        if on_RPi:
+            # rpi.Open_status
+            bbox, pred_name = rpi.main_vision()
+            if bbox is not None and pred_name.lower() != "unknown":
+                self.insert_list(pred_name+'-'+str(suhu))
+                draw_box_name(bbox, pred_name, image)
+
 
         # get image infos
         height, width, channel = image.shape
