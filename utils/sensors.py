@@ -181,6 +181,8 @@ class CamTherm(AMG8833):
         bicubic = griddata(self._points, pixels, (self._grid_x, self._grid_y), method='cubic')
 
         #--- proses kalibrasi
+        suhu = np.max(bicubic)
+
 
         #draw everything
         data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
@@ -190,4 +192,6 @@ class CamTherm(AMG8833):
                 data_img[jx,ix] = [r,g,b]
         # pygame.display.update()
         data_img = np.rot90(data_img, k=1)
-        return data_img
+        data_img = np.flip(data_img, 1)
+
+        return data_img, suhu

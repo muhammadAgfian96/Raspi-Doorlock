@@ -137,8 +137,8 @@ class MainWindow(QMainWindow):
 
 
         if self.count_FPS % 5 == 0 :
-            arrayTherm = rpi.thermalCam.getThermal()
-            arrayTherm = np.flip(arrayTherm, 1)
+            arrayTherm,suhu = rpi.thermalCam.getThermal()
+
             # -------- overlay thermal ----------
             y_offset=image.shape[0]-arrayTherm.shape[0]
             x_offset=0
