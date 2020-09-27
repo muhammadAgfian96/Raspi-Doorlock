@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
             # rpi.Open_status
             bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
-                self.insert_list(pred_name+' '+str(suhu)+'C*')
+                self.insert_list(pred_name+' '+'{:.2f}'.format(suhu+7.4)+' C ')
                 draw_box_name(bbox, pred_name, image)
 
 

@@ -22,7 +22,7 @@ GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
 
 #---- list pin pcb bolong ------
 pcb_bolong = edict()
-p_magnet_relay = 32 # ---- relay
+p_magnet_relay = 22 # ---- relay
 p_led_relay    = 26 # 
 p_trig_jarak   = 18 # ---- sensor jarak
 p_echo_jarak   = 16 # 
@@ -45,7 +45,7 @@ relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
 my_card = sensors.Card()
 #thermalCam = sensors.CamTherm(alamat=0x68)
-thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=80j, minTemp=25, maxTemp=30)
+thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=80j, minTemp=24, maxTemp=34)
 
 #------- GET FROM SERVER
 addr_server = "tcp://11.11.11.11:5556"

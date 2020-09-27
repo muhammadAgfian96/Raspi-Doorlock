@@ -87,7 +87,7 @@ class Jarak():
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
-factor_greater            timeStopJarak = time.time()
+            timeStopJarak = time.time()
             if timeStopJarak - runTimeStart > 1.5:
                 print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
@@ -173,22 +173,24 @@ class CamTherm(AMG8833):
     def _map(self, x, in_min, in_max, out_min, out_max):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-    def _regresikan(pixels_list, shape=(8,8)):
+    def _regresikan(self, pixels_list, shape=(8,8)):
+        print(type(pixels_list), pixels_list)
+
         rata2 = np.array(list(pixels_list)).mean()
         pixels_2d = np.array(pixels_list).reshape(shape)
         
-        logical_greater = pixels_2d > rata2 
-        logical_minor = pixels_2d < rata2
+        logical_greater = pixels_2d > rata2 + 1.7
+        logical_minor = pixels_2d < rata2 +0.7
         
-        factor_greater = pixels_2d[logical_greater] * (-0.014523) + 1.682925
-        factor_minor = pixels_2d[logical_minor] * (-0.009277) + 1.215660
+        factor_greater = pixels_2d[logical_greater] * (-0.014523) + 1.456925
+        factor_minor = pixels_2d[logical_minor] * (-0.009277) + 1.115660
         
         greater = pixels_2d[logical_greater] * factor_greater
         minor = pixels_2d[logical_minor] * factor_minor
         
         pixels_2d[logical_greater] = greater
         pixels_2d[logical_minor] = minor
-        
+        print(rata2)        
         print(np.array(list(pixels_list)).reshape(-1,1).shape)
         pixels_1d = pixels_2d.reshape((1, max(np.array(list(pixels_list)).reshape(-1,1).shape)))
         
@@ -196,9 +198,12 @@ class CamTherm(AMG8833):
 
     def getThermal(self,):
         pixels_origin = self._cam.read_temp()
-        pixels_2d, pixels_1d, rata2 = self._regresikan(pixels_origin)
+        #print(pixels_origin, type(pixels_origin))
 
-        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_1d]
+        pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
+        print(pixels_origin, type(pixels_origin))
+
+        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_origin]
 
         #perdorm interpolation
         bicubic = griddata(self._points, pixels, (self._grid_x, self._grid_y), method='cubic')
