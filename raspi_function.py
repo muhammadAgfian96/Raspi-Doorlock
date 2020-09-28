@@ -189,7 +189,6 @@ def main_input():
         open_status_sJarak = True
         first_time_jarak = True
         print("[sensors] signal open")
-    print("[sensors] Openstatus ", Open_status)
 
     # ---- RFID
     counting_RFID += 1
