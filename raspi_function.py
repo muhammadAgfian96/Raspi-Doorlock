@@ -181,13 +181,13 @@ def main_input():
     # ---- sensor jarak
     jarak_object =  s_jarak.detect(v=True)
     if  jarak_object < 7:
-           signal_open += 1
-           time.sleep(0.2)
+        signal_open += 1
+        time.sleep(0.2)
 
     if signal_open == 5 :
-       signal_open = 0
-       open_status_sJarak = True
-       first_time_jarak = True
+        signal_open = 0
+        open_status_sJarak = True
+        first_time_jarak = True
         print("[sensors] signal open")
     print("[sensors] Openstatus ", Open_status)
 
