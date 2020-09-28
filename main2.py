@@ -122,7 +122,6 @@ class MainWindow(QMainWindow):
         h_img, w_img, ch = image.shape
         h_1 = h_img//2
         w_1  = w_img//2
-        # print(h_1, w_1)
         constant_val = 100
         # image = cv2.resize(image, (608,608))
         # cv2.putText(image, "Put Your Face Here in Box", 
@@ -136,32 +135,33 @@ class MainWindow(QMainWindow):
 
 
 
-        if self.count_FPS % 5 == 0 :
-            arrayTherm, suhu = rpi.thermalCam.getThermal()
-
-            # -------- overlay thermal ----------
-            y_offset=image.shape[0]-arrayTherm.shape[0]
-            x_offset=0
-
-            alpha = 0.5
-            output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-            cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-            image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-            
-            self.count_FPS = 0
-        else:
-            y_offset=image.shape[0]-arrayTherm.shape[0]
-            x_offset=0
-            alpha = 0.5
-
-            output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-            cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-            image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-            
-        self.count_FPS+=1
+        
 
         # ------- Function for Doorlock --------
         if on_RPi:
+            if self.count_FPS % 5 == 0 :
+                arrayTherm, suhu = rpi.thermalCam.getThermal()
+
+                # -------- overlay thermal ----------
+                y_offset=image.shape[0]-arrayTherm.shape[0]
+                x_offset=0
+
+                alpha = 0.5
+                output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+                cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+                image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+                
+                self.count_FPS = 0
+            else:
+                y_offset=image.shape[0]-arrayTherm.shape[0]
+                x_offset=0
+                alpha = 0.5
+
+                output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
+                cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
+                image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
+            
+            self.count_FPS+=1
             # rpi.Open_status
             bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":

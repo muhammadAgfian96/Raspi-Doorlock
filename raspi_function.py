@@ -20,14 +20,14 @@ import RPi.GPIO as GPIO
 GPIO.setwarnings(False)    # Ignore warning for now
 GPIO.setmode(GPIO.BOARD)   # Use physical pin numbering
 
-#---- list pin pcb bolong ------
+#---- list pin pcb  ------
 pcb_bolong = edict()
 p_magnet_relay = 32 # ---- relay
-p_led_relay    = 26 # 
+p_led_relay    = 11 # 
 p_trig_jarak   = 18 # ---- sensor jarak
 p_echo_jarak   = 16 # 
-p_exit_btn     = 7  # ---- button
-p_buzzer       = 11 # ---- beep
+p_exit_btn     = 29 # ---- button
+p_buzzer       = 12 # ---- beep
 p_RST_RFID     = 13 # ---- RFID
 p_MISO_RFID    = 35 
 p_MOSI_RFID    = 38
@@ -73,6 +73,8 @@ open_status_RFID = False
 
 
 count_close = 0
+counting_RFID = 0
+
 old_time = time.time()
 first_time = True
 first_time_jarak = True
@@ -169,6 +171,7 @@ def main_vision():
 def main_input():
     global Open_status, first_time_jarak, signal_open, start_time_jarak
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
+    global counting_RFID
 
     # ---- exit button
     if exit_btn.isPressed:
@@ -176,22 +179,26 @@ def main_input():
         open_status_button = True
     
     # ---- sensor jarak
-    #jarak_object =  s_jarak.detect(v=True)
-    #if  jarak_object < 7:
-    #        signal_open += 1
-    #        time.sleep(0.2)
+    jarak_object =  s_jarak.detect(v=True)
+    if  jarak_object < 7:
+           signal_open += 1
+           time.sleep(0.2)
 
-    #if signal_open == 5 :
-    #    signal_open = 0
-    #    open_status_sJarak = True
-    #    first_time_jarak = True
-        # print("[sensors] signal open")
-    # print("[sensors] Openstatus ", Open_status)
+    if signal_open == 5 :
+       signal_open = 0
+       open_status_sJarak = True
+       first_time_jarak = True
+        print("[sensors] signal open")
+    print("[sensors] Openstatus ", Open_status)
+
     # ---- RFID
-    #uid = my_card.read_card()
-    #print(uid)
-    #if uid == "249108142":
-    #    open_status_RFID = True
+    counting_RFID += 1
+    if counting_RFID == 7:
+        counting_RFID = 0
+        uid = my_card.read_card()
+        print("[OPEN]", uid)
+        if uid == "249108142":
+            open_status_RFID = True
 
 
 def main_output():

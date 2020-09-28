@@ -82,13 +82,13 @@ class Jarak():
         runTimeStart = time.time()
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
-            if timeStartJarak - runTimeStart > 1.5:
+            if timeStartJarak - runTimeStart > 0.25:
                 print('[Error Sensors] Timeout 0 Jarak!')
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
-factor_greater            timeStopJarak = time.time()
-            if timeStopJarak - runTimeStart > 1.5:
+            timeStopJarak = time.time()
+            if timeStopJarak - runTimeStart > 0.25:
                 print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
         # time difference between start and arrival 
@@ -196,6 +196,7 @@ class CamTherm(AMG8833):
 
     def getThermal(self,):
         pixels_origin = self._cam.read_temp()
+        print()
         pixels_2d, pixels_1d, rata2 = self._regresikan(pixels_origin)
 
         pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_1d]
