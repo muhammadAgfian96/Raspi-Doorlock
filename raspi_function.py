@@ -175,7 +175,7 @@ def main_input():
 
     # ---- exit button
     if exit_btn.isPressed:
-        time.sleep(0.5)
+        time.sleep(0.1)
         open_status_button = True
     
     # ---- sensor jarak
