@@ -22,10 +22,10 @@ class PushButton():
         know condition push
         """
         if GPIO.input(self.__pin_tombol):
-            #print('button HIGH')
+            print('button HIGH')
             return True
         else:
-            #print('button LOW')
+            print('button LOW')
             return False
         
 class Relay():

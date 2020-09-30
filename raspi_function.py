@@ -81,6 +81,9 @@ first_time_jarak = True
 start_time = time.time()
 signal_open = 0
 door_time = time.time()
+state_time_btn = time.time()
+state_time_sJarak = time.time()
+
 
 def display(pesan):
     pass
@@ -127,7 +130,7 @@ def rcvMsgJSON():
     
 def getThermalArray():
     arrayTherm = thermalCam.getThermal()
-# -------- overlay thermal ----------
+    # -------- overlay thermal ----------
     y_offset=image.shape[0]-arrayTherm.shape[0]
     x_offset=0
     # print(image.shape, )
@@ -169,33 +172,35 @@ def main_vision():
         
 
 def main_input():
-    global Open_status, first_time_jarak, signal_open, start_time_jarak
+    global first_time_jarak, signal_open, start_time_jarak
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
     global counting_RFID
+    global state_time_btn, state_time_sJarak
 
     # ---- exit button
-    if exit_btn.isPressed:
-        time.sleep(0.5)
+    if exit_btn.isPressed and (time.time() - state_time_btn > 0.1):
+        # time.sleep(0.1)
         open_status_button = True
+        state_time_btn = time.time()
     
     # ---- sensor jarak
     jarak_object =  s_jarak.detect(v=True)
-    if  jarak_object < 7:
+    if  jarak_object < 7 and (time.time() - state_time_sJarak > 0.2):
         signal_open += 1
-        time.sleep(0.2)
+        state_time_sJarak = time.time()
 
     if signal_open == 5 :
         signal_open = 0
         open_status_sJarak = True
         first_time_jarak = True
-        print("[sensors] signal open")
+        print("[JARAK] signal open")
 
     # ---- RFID
     counting_RFID += 1
-    if counting_RFID == 7:
+    if counting_RFID == 10:
         counting_RFID = 0
         uid = my_card.read_card()
-        print("[OPEN]", uid)
+        print("[RFID CARD]", uid)
         if uid == "249108142":
             open_status_RFID = True
 
