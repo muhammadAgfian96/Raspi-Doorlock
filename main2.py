@@ -191,7 +191,9 @@ class MainWindow(QMainWindow):
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             print(self.myPeople)
-            if self.myPeople[objectID][0] is None:
+            if self.myPeople is None:
+                continue
+            elif self.myPeople[objectID][0] is None:
                 draw_box_name(single_bbox, "ga kenal", image, suhu=self.myPeople[objectID][1])
             else:
                 draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
