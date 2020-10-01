@@ -51,7 +51,7 @@ class CentroidTracker():
 
 			# return early as there are no centroids or tracking info
 			# to update
-			print(self.boxesObj)
+			# print(self.boxesObj)
 			return self.objects, self.boxesObj
 
 		# initialize an array of input centroids for the current frame
@@ -65,7 +65,7 @@ class CentroidTracker():
 			cY = int((startY + endY) / 2.0)
 			inputCentroids[i] = (cX, cY)
 			bboxTrack[i] = (startX, startY, endX, endY)
-			print("heheh", inputCentroids," || ", bboxTrack)
+			# print("heheh", inputCentroids," || ", bboxTrack)
 
 		# if we are currently not tracking any objects take the input
 		# centroids and register each of them
@@ -80,7 +80,7 @@ class CentroidTracker():
 			# grab the set of object IDs and corresponding centroids
 			objectIDs = list(self.objects.keys())
 			objectCentroids = list(self.objects.values())
-			print(objectCentroids)
+			# print(objectCentroids)
 
 			# compute the distance between each pair of object
 			# centroids and input centroids, respectively -- our
@@ -160,5 +160,5 @@ class CentroidTracker():
 					self.register(inputCentroids[col], bboxTrack[col])
 
 		# return the set of trackable objects
-		print(self.boxesObj)
+		# print(self.boxesObj)
 		return self.objects, self.boxesObj

@@ -42,7 +42,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
-ct = CentroidTracker(maxDisappeared=7)
+ct = CentroidTracker(maxDisappeared=4)
 
 
 class MainWindow(QMainWindow):
