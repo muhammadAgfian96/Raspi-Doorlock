@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
 
             bbox, pred_name = rpi.main_vision()
-
+            ct.update(bbox) # ---- TRACKING 
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
 
@@ -183,13 +183,19 @@ class MainWindow(QMainWindow):
             pred_name='face'
             suhu = 36.8
         
-        objects = ct.update(boxes)
-
+        # ---- TRACKING 
+        obj_center, obj_bbox = ct.update(boxes)
+        
         # draw bbox
-        for ((objectID, centroid), bbox) in zip(objects.items(), bbox):
+        for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             if objectID not in self.myPeople.keys():
-                self.myPeople[objectID] = pred_name
-            draw_box_name(bbox, myPeople[objectID], image, suhu=suhu)
+                self.myPeople[objectID] = [pred_name, suhu]
+            draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
+            # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
+            # text = "ID {}".format(objectID)
+            # cv2.putText(image, text, (centroid[0] - 10, centroid[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+
 
 
         # get image infos
