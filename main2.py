@@ -193,11 +193,17 @@ class MainWindow(QMainWindow):
         
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-            print(myPeople)
+            print(myPeople, objectID)
             if len(myPeople) == 0:
                 continue
             else:
-                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                try:
+                    draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                except:
+                    if pred_name == myPeople[objectID-1][0]:
+                        myPeople[objectID] = [pred_name, suhu]
+                        del myPeople[objectID-1]
+
             
             # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
             # text = "ID {}".format(objectID)
