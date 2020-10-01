@@ -172,9 +172,9 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
 
             bbox, pred_name = rpi.main_vision()
-            ct.update(bbox) # ---- TRACKING 
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
+                ct.update(bbox) # ---- TRACKING 
 
             
             # if pred_name is None:
