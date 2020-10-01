@@ -177,12 +177,12 @@ class MainWindow(QMainWindow):
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
                     for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                        if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
+                        if (objectID not in self.myPeople.keys()):
                             self.myPeople[objectID] = [pred_name, suhu]
                 else:
                     pred_name = "unknown"
                     for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                        if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
+                        if (objectID not in self.myPeople.keys()):
                             self.myPeople[objectID] = [pred_name, suhu]
                     
             
