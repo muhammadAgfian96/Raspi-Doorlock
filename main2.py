@@ -29,6 +29,7 @@ from utils.vision_helper import draw_box_name
 import cv2
 import imutils
 from imutils.video import VideoStream
+from imutils.video import FPS
 
 import time
 import datetime
@@ -49,9 +50,15 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
-        path_cam1 = 'http://11.11.11.12:8555' 
-        
-        self.cap = VideoStream(src=path_cam1).start()
+        if on_RPi:
+            path_cam1 = 'http://11.11.11.12:8555' 
+            self.cap = VideoStream(src=path_cam1, usePiCamera=True).start()
+        else:
+            path_cam1 = 0
+            self.cap = VideoStream(src=path_cam1, usePiCamera=False).start()
+
+        self.detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
         time.sleep(2.0)
 
         # self.cap = cv2.VideoCapture(path_cam1)
@@ -123,31 +130,23 @@ class MainWindow(QMainWindow):
 
         # read image in BGR format
         image = self.cap.read()
-        # ret, image = self.cap.read()
-        # convert image to RGB format
+        image = imutils.resize(image, width=400) # for face
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+
+        rects = self.detector.detectMultiScale(gray, scaleFactor=1.1, 
+            minNeighbors=5, minSize=(30, 30),
+            flags=cv2.CASCADE_SCALE_IMAGE)
+
+        boxes = [[x, y, x + w, y + h] for (x, y, w, h) in rects]
+
         h_img, w_img, ch = image.shape
-        h_1 = h_img//2
-        w_1  = w_img//2
-        constant_val = 100
-        print(image.shape)
-        # image = cv2.resize(image, (608,608))
-        # cv2.putText(image, "Put Your Face Here in Box", 
-        #             (w_1-constant_val, h_1-constant_val-5),
-        #             cv2.FONT_HERSHEY_COMPLEX, 0.5, (255,0,0), thickness=1)
-        # cv2.rectangle(image, 
-        #                 (w_1-constant_val, h_1-constant_val), 
-        #                 (w_1+constant_val, h_1+constant_val), 
-        #                 (255,0,0), thickness=3)
-        
-
-
-
-        
 
         # ------- Function for Doorlock --------
         if on_RPi:
-            if self.count_FPS % 5 == 0 :
+            if self.count_FPS % 10 == 0 :
                 arrayTherm, suhu = rpi.thermalCam.getThermal()
 
                 # -------- overlay thermal ----------
@@ -172,9 +171,16 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
             # rpi.Open_status
             bbox, pred_name = rpi.main_vision()
+
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name+' '+'{:.2f}'.format(suhu+7.4)+' C ')
-                draw_box_name(bbox, pred_name, image)
+        else:
+            pred_name='face'
+            suhu = 36.8
+        
+        # draw bbox
+        for bbox in boxes:
+            draw_box_name(bbox, pred_name, image, suhu=suhu)
 
 
         # get image infos
