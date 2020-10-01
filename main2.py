@@ -19,14 +19,17 @@ from ui_functions import *
 try:
     import RPi.GPIO as gpio
     on_RPi = True
+    import raspi_function as rpi
     print("work on raspberry pi")
 except (ImportError, RuntimeError):
     on_RPi = False
 
 from utils.vision_helper import draw_box_name
-import raspi_function as rpi
 
 import cv2
+import imutils
+from imutils.video import VideoStream
+
 import time
 import datetime
 
@@ -47,9 +50,12 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
         path_cam1 = 'http://11.11.11.12:8555' 
-        self.cap = cv2.VideoCapture(path_cam1)
-        time.sleep(1)
+        
+        self.cap = VideoStream(src=path_cam1).start()
+        time.sleep(2.0)
 
+        # self.cap = cv2.VideoCapture(path_cam1)
+        # time.sleep(1)
 
         # vision opetarion
         self.streamCamera = QTimer()
@@ -116,13 +122,15 @@ class MainWindow(QMainWindow):
         global arrayTherm, suhu
 
         # read image in BGR format
-        ret, image = self.cap.read()
+        image = self.cap.read()
+        # ret, image = self.cap.read()
         # convert image to RGB format
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         h_img, w_img, ch = image.shape
         h_1 = h_img//2
         w_1  = w_img//2
         constant_val = 100
+        print(image.shape)
         # image = cv2.resize(image, (608,608))
         # cv2.putText(image, "Put Your Face Here in Box", 
         #             (w_1-constant_val, h_1-constant_val-5),
