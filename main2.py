@@ -42,7 +42,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
-ct = CentroidTracker()
+ct = CentroidTracker(maxDisappeared=7)
 
 
 class MainWindow(QMainWindow):
@@ -190,7 +190,10 @@ class MainWindow(QMainWindow):
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             if objectID not in self.myPeople.keys():
                 self.myPeople[objectID] = [pred_name, suhu]
-            draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
+            if self.myPeople[objectID][0] is None:
+                draw_box_name(single_bbox, "ga kenal", image, suhu=self.myPeople[objectID][1])
+            else:
+                draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
             # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
             # text = "ID {}".format(objectID)
             # cv2.putText(image, text, (centroid[0] - 10, centroid[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

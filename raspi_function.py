@@ -168,7 +168,7 @@ def main_vision():
     if pred_bbox is None:
         return None, None
     else:
-        return pred_bbox, pred_name
+        return list(pred_bbox), pred_name
         
 
 def main_input():
