@@ -176,7 +176,7 @@ class MainWindow(QMainWindow):
             if bbox is not None:
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
                 for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                    if (objectID not in self.myPeople.keys()):
+                    if (objectID not in myPeople.keys()):
                         myPeople[objectID] = [pred_name, suhu]
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
             if len(myPeople) == 0:
                 continue
             else:
-                draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
+                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
             
             # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
             # text = "ID {}".format(objectID)
