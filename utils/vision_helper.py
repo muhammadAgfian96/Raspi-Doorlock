@@ -13,13 +13,13 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 		color_text = (0,0,0)
 	else:
 		suhu += 5.5
-		suhu = '{:.2f}'.format(suhu)
 		if suhu > threshold_suhu:
 			color_bbox = (255,0,0)
 			color_text = (255,255,255)
 		else:
 			color_text = (0,0,0)
 			color_bbox = (0,255,0)
+		suhu = '{:.2f}'.format(suhu)
 
 
 	frame = cv2.rectangle(frame, (bbox[0], bbox[1]), 
