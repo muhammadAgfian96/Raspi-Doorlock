@@ -174,8 +174,10 @@ class MainWindow(QMainWindow):
             bbox, pred_name = rpi.main_vision()
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
-                ct.update(bbox) # ---- TRACKING 
-
+                obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
+                for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+                    if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
+                        self.myPeople[objectID] = [pred_name, suhu]
             
             # if pred_name is None:
             #     pred_name = 'ga kenal'
@@ -189,9 +191,6 @@ class MainWindow(QMainWindow):
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             print(self.myPeople)
-            if (pred_name not in self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
-                self.myPeople[objectID] = [pred_name, suhu]
-
             if self.myPeople[objectID][0] is None:
                 draw_box_name(single_bbox, "ga kenal", image, suhu=self.myPeople[objectID][1])
             else:
