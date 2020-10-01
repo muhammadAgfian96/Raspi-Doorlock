@@ -43,6 +43,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=4)
+myPeople = {}
 
 
 class MainWindow(QMainWindow):
@@ -51,7 +52,6 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
-        self.myPeople = {}
         if on_RPi:
             path_cam1 = 'http://11.11.11.12:8555' 
             self.cap = VideoStream(src=path_cam1).start()
@@ -86,6 +86,7 @@ class MainWindow(QMainWindow):
         self.streamDate = QTimer()
         self.streamDate.setInterval(1000)
         self.streamDate.timeout.connect(self.showTime)
+
         self.streamDate.start()
         self.count_FPS = 0
 
@@ -128,7 +129,7 @@ class MainWindow(QMainWindow):
         return image
 
     def stream_camera_on(self):
-        global arrayTherm, suhu, ct
+        global arrayTherm, suhu, ct, myPeople
 
         # read image in BGR format
         image = self.cap.read()
@@ -174,16 +175,11 @@ class MainWindow(QMainWindow):
             bbox, pred_name = rpi.main_vision()
             if bbox is not None:
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
+                for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+                    if (objectID not in self.myPeople.keys()):
+                        myPeople[objectID] = [pred_name, suhu]
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
-                    for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                        if (objectID not in self.myPeople.keys()):
-                            self.myPeople[objectID] = [pred_name, suhu]
-                else:
-                    pred_name = "unknown"
-                    for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                        if (objectID not in self.myPeople.keys()):
-                            self.myPeople[objectID] = [pred_name, suhu]
                     
             
             # if pred_name is None:
@@ -197,13 +193,12 @@ class MainWindow(QMainWindow):
         
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-            print(self.myPeople)
-            if len(self.myPeople) == 0:
+            print(myPeople)
+            if len(myPeople) == 0:
                 continue
-            # elif self.myPeople[objectID][0] is None:
-            #     draw_box_name(single_bbox, "Ga kenal", image, suhu=self.myPeople[objectID][1])
             else:
                 draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
+            
             # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
             # text = "ID {}".format(objectID)
             # cv2.putText(image, text, (centroid[0] - 10, centroid[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
