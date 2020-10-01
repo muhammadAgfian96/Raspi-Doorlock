@@ -30,12 +30,11 @@ import cv2
 import imutils
 from imutils.video import VideoStream
 from imutils.video import FPS
+from utils.centroidtracker import CentroidTracker
 
 import time
 import datetime
 
-
-import threading
 
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
@@ -43,6 +42,8 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
+ct = CentroidTracker()
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -50,7 +51,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
-        
+        self.myPeople = {}
         if on_RPi:
             path_cam1 = 'http://11.11.11.12:8555' 
             self.cap = VideoStream(src=path_cam1).start()
@@ -127,7 +128,7 @@ class MainWindow(QMainWindow):
         return image
 
     def stream_camera_on(self):
-        global arrayTherm, suhu
+        global arrayTherm, suhu, ct
 
         # read image in BGR format
         image = self.cap.read()
@@ -135,7 +136,6 @@ class MainWindow(QMainWindow):
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
 
         rects = self.detector.detectMultiScale(gray, scaleFactor=1.1, 
             minNeighbors=5, minSize=(30, 30),
@@ -170,20 +170,26 @@ class MainWindow(QMainWindow):
                 image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
             
             self.count_FPS+=1
-            # rpi.Open_status
+
             bbox, pred_name = rpi.main_vision()
 
             if bbox is not None and pred_name.lower() != "unknown":
                 self.insert_list(pred_name)
-            if pred_name is None:
-                pred_name = 'ga kenal'
+
+            
+            # if pred_name is None:
+            #     pred_name = 'ga kenal'
         else:
             pred_name='face'
             suhu = 36.8
         
+        objects = ct.update(boxes)
+
         # draw bbox
-        for bbox in boxes:
-            draw_box_name(bbox, pred_name, image, suhu=suhu)
+        for ((objectID, centroid), bbox) in zip(objects.items(), bbox):
+            if objectID not in self.myPeople.keys():
+                self.myPeople[objectID] = pred_name
+            draw_box_name(bbox, myPeople[objectID], image, suhu=suhu)
 
 
         # get image infos
@@ -227,3 +233,4 @@ if __name__ == "__main__":
     if on_RPi:
         window.showFullScreen()
     sys.exit(app.exec_())
+
