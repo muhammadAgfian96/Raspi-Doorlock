@@ -2,7 +2,7 @@
 
 import cv2
 
-def draw_box_name(bbox, name, frame, suhu='error', threshold_suhu=38.0):
+def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 	"""
 	Arguments:
 		bbox = x, y, x+w, y+h --> (atas, bawah)
@@ -12,6 +12,8 @@ def draw_box_name(bbox, name, frame, suhu='error', threshold_suhu=38.0):
 		color_bbox = (0,0,255)
 		color_text = (0,0,0)
 	else:
+		suhu += 5.5
+		suhu = '{:.2f}'.format(suhu)
 		if suhu > threshold_suhu:
 			color_bbox = (255,0,0)
 			color_text = (255,255,255)

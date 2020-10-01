@@ -50,9 +50,10 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
+        
         if on_RPi:
             path_cam1 = 'http://11.11.11.12:8555' 
-            self.cap = VideoStream(src=path_cam1, usePiCamera=True).start()
+            self.cap = VideoStream(src=path_cam1).start()
         else:
             path_cam1 = 0
             self.cap = VideoStream(src=path_cam1, usePiCamera=False).start()
@@ -173,7 +174,9 @@ class MainWindow(QMainWindow):
             bbox, pred_name = rpi.main_vision()
 
             if bbox is not None and pred_name.lower() != "unknown":
-                self.insert_list(pred_name+' '+'{:.2f}'.format(suhu+7.4)+' C ')
+                self.insert_list(pred_name)
+            if pred_name is None:
+                pred_name = 'ga kenal'
         else:
             pred_name='face'
             suhu = 36.8
