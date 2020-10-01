@@ -172,12 +172,19 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
 
             bbox, pred_name = rpi.main_vision()
-            if bbox is not None and pred_name.lower() != "unknown":
-                self.insert_list(pred_name)
+            if bbox is not None:
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
-                for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                    if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
-                        self.myPeople[objectID] = [pred_name, suhu]
+                if pred_name.lower() != "unknown":
+                    self.insert_list(pred_name)
+                    for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+                        if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
+                            self.myPeople[objectID] = [pred_name, suhu]
+                else:
+                    pred_name = "unknown"
+                    for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+                        if (pred_name == self.myPeople[objectID][0]) or (objectID not in self.myPeople.keys()):
+                            self.myPeople[objectID] = [pred_name, suhu]
+                    
             
             # if pred_name is None:
             #     pred_name = 'ga kenal'
@@ -191,10 +198,10 @@ class MainWindow(QMainWindow):
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             print(self.myPeople)
-            if self.myPeople is None:
+            if len(self.myPeople) == 0:
                 continue
-            elif self.myPeople[objectID][0] is None:
-                draw_box_name(single_bbox, "ga kenal", image, suhu=self.myPeople[objectID][1])
+            # elif self.myPeople[objectID][0] is None:
+            #     draw_box_name(single_bbox, "Ga kenal", image, suhu=self.myPeople[objectID][1])
             else:
                 draw_box_name(single_bbox, self.myPeople[objectID][0], image, suhu=self.myPeople[objectID][1])
             # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
