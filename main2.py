@@ -133,6 +133,8 @@ class MainWindow(QMainWindow):
 
         # read image in BGR format
         image = self.cap.read()
+        start_time = time.time()
+
         image = imutils.resize(image, width=400) # for face
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
@@ -148,7 +150,7 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
-            if self.count_FPS % 10 == 0 :
+            if self.count_FPS % 7 == 0 :
                 arrayTherm, suhu = rpi.thermalCam.getThermal()
 
                 # -------- overlay thermal ----------
@@ -159,8 +161,7 @@ class MainWindow(QMainWindow):
                 output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
                 cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
                 image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-                
-                self.count_FPS = 0
+
             else:
                 y_offset=image.shape[0]-arrayTherm.shape[0]
                 x_offset=0
@@ -174,26 +175,27 @@ class MainWindow(QMainWindow):
 
             bbox, pred_name = rpi.main_vision()
             if bbox is not None:
+
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
                 self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+
                 for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
-                    # if (objectID not in myPeople.keys()):
                     myPeople[objectID] = [pred_name, suhu]
                     print("capture -->", myPeople, pred_name)
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
-                    
-            
-            # if pred_name is None:
-            #     pred_name = 'ga kenal'
+
         else:
             pred_name='face'
             suhu = 36.8
         
         # ---- TRACKING 
-        obj_center, obj_bbox = ct.update(boxes)
-        self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+        if self.count_FPS % 3 == 0:
+            obj_center, obj_bbox = ct.update(boxes)
+            self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
 
+        if self.count_FPS == 70:
+            self.count_FPS =0
         print("HEYY",myPeople, obj_center, pred_name)
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
@@ -212,13 +214,10 @@ class MainWindow(QMainWindow):
                     draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
-            
-            # draw_box_name(single_bbox, str(objectID), image, suhu=suhu)
-            # text = "ID {}".format(objectID)
-            # cv2.putText(image, text, (centroid[0] - 10, centroid[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            # cv2.circle(image, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
-
-
+        FPS =  1/ (time.time()-start_time)     
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0),1)
+        
+        
 
         # get image infos
         height, width, channel = image.shape
