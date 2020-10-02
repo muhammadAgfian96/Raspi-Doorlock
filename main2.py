@@ -192,15 +192,16 @@ class MainWindow(QMainWindow):
         # ---- TRACKING 
         obj_center, obj_bbox = ct.update(boxes)
         
-        self.deleteExpireObject(myPeople, obj_center)
+        self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+
         print("HEYY",myPeople, obj_center, pred_name)
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             print(myPeople, objectID)
-            myPeople[objectID] = [pred_name, suhu]
             if len(myPeople) == 0:
                 continue
-            elif myPeople[objectID] is not None and pred_name is None:
+            elif myPeople[objectID] is not None:
+                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
                 continue
             else:
                 try:
@@ -227,10 +228,14 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
     
-    def deleteExpireObject(self, myObj, trackingObj):
+    def deleteExpireObjectAndGetNewObj(self, myObj, trackingObj):
         diff = set(list(myObj.keys())).difference(list(trackingObj.keys()))
+        futureObjt = set(list(myObj.keys())).difference(list(trackingObj.keys()))
         for i in diff:
             del myObj[i]
+        
+        for i in futureObjt:
+            myObj[i] = ['unknown', 'ERR']
 
 
     def processing_sensors(self):
