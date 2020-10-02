@@ -179,17 +179,17 @@ class MainWindow(QMainWindow):
             if bbox is not None:
 
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
-                _ = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
 
+                print('# check future', futureObj)
                 for (objectID, centroid) in obj_center.items():
-                    print('# check future', futureObj)
-                    if futureObj == objectID:
+                    if futureObj == objectID and myPeople[objectID] == 'saha?':
                         myPeople[objectID] = [pred_name, suhu]
                     # print("capture -->", myPeople, pred_name)
 
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
 
+                self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
                 getData = True
         else:
             pred_name='face'
@@ -206,8 +206,9 @@ class MainWindow(QMainWindow):
         if (self.count_FPS % 2 == 0) or start_time-time.time() < 3:
             print('# Global Tracking')
             obj_center, obj_bbox = ct.update(boxes)
-            futureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
-            getData = False
+            rawFutureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+            if rawFutureObj is not None:
+                futureObj = rawFutureObj
 
         print("HEYY",myPeople, obj_center, pred_name)
         # draw bbox
@@ -227,7 +228,7 @@ class MainWindow(QMainWindow):
 
 
         FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0),1)
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 1.2)
         if self.count_FPS == 70:
             self.count_FPS =0
         
@@ -243,16 +244,16 @@ class MainWindow(QMainWindow):
     
     def deleteExpireObjectAndGetNewObj(self, myObj, trackingObj):
         diff = set(myObj.keys()).difference(trackingObj.keys())
-        futureObj = set(trackingObj.keys()).difference(myObj.keys())
-        print("---->", futureObj, "|", diff,"|\n--->   ", myObj,">",trackingObj)
+        futureObject = set(trackingObj.keys()).difference(myObj.keys())
+        #print("---->", futureObj, "|", diff,"|\n--->   ", myObj,">",trackingObj)
         #time.sleep(1.0)
         for i in diff:
             del myObj[i]
         for i in futureObj:
-            myObj[i] = ['unknown', 'ERR']
+            myObj[i] = ['saha?', 'ERR']
 
         # print("--->", futureObjt, diff)
-        return futureObj
+        return futureObject
 
     def processing_sensors(self):
         if on_RPi:
