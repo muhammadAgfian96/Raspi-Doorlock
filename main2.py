@@ -175,6 +175,7 @@ class MainWindow(QMainWindow):
             bbox, pred_name = rpi.main_vision()
             if bbox is not None:
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
+                self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
                 for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
                     # if (objectID not in myPeople.keys()):
                     myPeople[objectID] = [pred_name, suhu]
@@ -236,6 +237,8 @@ class MainWindow(QMainWindow):
         
         for i in futureObjt:
             myObj[i] = ['unknown', 'ERR']
+
+        return myObj
 
 
     def processing_sensors(self):
