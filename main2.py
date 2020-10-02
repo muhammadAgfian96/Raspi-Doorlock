@@ -31,6 +31,7 @@ import imutils
 from imutils.video import VideoStream
 from imutils.video import FPS
 from utils.centroidtracker import CentroidTracker
+from collections import OrderedDict
 
 import time
 import datetime
@@ -43,7 +44,8 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
-myPeople = {}
+myPeople = OrderedDict()
+getData = False
 
 
 class MainWindow(QMainWindow):
@@ -129,7 +131,7 @@ class MainWindow(QMainWindow):
         return image
 
     def stream_camera_on(self):
-        global arrayTherm, suhu, ct, myPeople
+        global arrayTherm, suhu, ct, myPeople, getData
 
         # read image in BGR format
         image = self.cap.read()
@@ -179,32 +181,38 @@ class MainWindow(QMainWindow):
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
                 self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
 
-                for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+                for (objectID, centroid) in obj_center.items():
                     myPeople[objectID] = [pred_name, suhu]
-                    print("capture -->", myPeople, pred_name)
+                    # print("capture -->", myPeople, pred_name)
+
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
 
+                getData = True
         else:
             pred_name='face'
             suhu = 36.8
-        
-        # ---- TRACKING 
-        if self.count_FPS % 3 == 0:
-            obj_center, obj_bbox = ct.update(boxes)
+            obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
+            # print(myPeople)
             self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
 
-        if self.count_FPS == 70:
-            self.count_FPS =0
+            for (objectID, centroid) in obj_center.items():
+                myPeople[objectID] = [str(objectID)+'_face', suhu]
+        
+        # ---- TRACKING 
+        if self.count_FPS % 2 == 0 and not getData:
+            obj_center, obj_bbox = ct.update(boxes)
+            self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+            getData = False
+
         print("HEYY",myPeople, obj_center, pred_name)
         # draw bbox
-        for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
+        for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             print("test",myPeople, objectID)
             if len(myPeople) == 0:
                 continue
             elif myPeople[objectID] is not None:
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
-                continue
             else:
                 try:
                     draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
@@ -216,6 +224,8 @@ class MainWindow(QMainWindow):
 
         FPS =  1/ (time.time()-start_time)     
         cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0),1)
+        if self.count_FPS == 70:
+            self.count_FPS =0
         
         
 

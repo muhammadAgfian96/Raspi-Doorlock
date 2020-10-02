@@ -4,7 +4,7 @@ from collections import OrderedDict
 import numpy as np
 
 class CentroidTracker():
-	def __init__(self, maxDisappeared=13):
+	def __init__(self, maxDisappeared=7):
 		# initialize the next unique object ID along with two ordered
 		# dictionaries used to keep track of mapping a given object
 		# ID to its centroid and number of consecutive frames it has
@@ -12,6 +12,8 @@ class CentroidTracker():
 		self.nextObjectID = 0
 		self.objects = OrderedDict()
 		self.boxesObj = OrderedDict()
+		# self.name = OrderedDict()
+		# self.suhu = OrderedDict()
 		self.disappeared = OrderedDict()
 
 		# store the number of maximum consecutive frames a given
@@ -25,6 +27,8 @@ class CentroidTracker():
 		self.objects[self.nextObjectID] = centroid
 		self.disappeared[self.nextObjectID] = 0
 		self.boxesObj[self.nextObjectID] = bbox
+		# self.name[self.nextObjectID] = name
+		# self.suhu[self.nextObjectID] = suhu
 		self.nextObjectID += 1
 
 	def deregister(self, objectID):
@@ -33,6 +37,8 @@ class CentroidTracker():
 		del self.objects[objectID]
 		del self.disappeared[objectID]
 		del self.boxesObj[objectID]
+		# del self.name[objectID]
+		# del self.suhu[objectID]
 
 	def update(self, rects):
 		# check to see if the list of input bounding box rectangles
@@ -52,11 +58,14 @@ class CentroidTracker():
 			# return early as there are no centroids or tracking info
 			# to update
 			# print(self.boxesObj)
+			# return self.objects, self.boxesObj, self.name, self.suhu
 			return self.objects, self.boxesObj
 
 		# initialize an array of input centroids for the current frame
 		inputCentroids = np.zeros((len(rects), 2), dtype="int")
 		bboxTrack = np.zeros((len(rects), 4), dtype="int")
+		# suhuTrack = np.zeros((len(rects), 1), dtype="float")
+		# nameTrack = np.zeros((len(rects), 1))
 
 		# loop over the bounding box rectangles
 		for (i, (startX, startY, endX, endY)) in enumerate(rects):
@@ -65,6 +74,9 @@ class CentroidTracker():
 			cY = int((startY + endY) / 2.0)
 			inputCentroids[i] = (cX, cY)
 			bboxTrack[i] = (startX, startY, endX, endY)
+			# nameTrack[i] = (name)
+			# suhuTrack[i] = (suhu)
+
 			# print("heheh", inputCentroids," || ", bboxTrack)
 
 		# if we are currently not tracking any objects take the input
@@ -72,6 +84,7 @@ class CentroidTracker():
 		if len(self.objects) == 0:
 			for i in range(0, len(inputCentroids)):
 				self.register(inputCentroids[i], bboxTrack[i])
+				# self.register(inputCentroids[i])
 
 		# otherwise, are are currently tracking objects so we need to
 		# try to match the input centroids to existing object
@@ -121,6 +134,8 @@ class CentroidTracker():
 				objectID = objectIDs[row]
 				self.objects[objectID] = inputCentroids[col]
 				self.boxesObj[objectID] = bboxTrack[col]
+				# self.name[objectID] = nameTrack[col] 
+				# self.suhu[objectID] = suhuTrack[col] 
 
 				self.disappeared[objectID] = 0
 
@@ -162,3 +177,4 @@ class CentroidTracker():
 		# return the set of trackable objects
 		# print(self.boxesObj)
 		return self.objects, self.boxesObj
+		# return self.objects
