@@ -197,17 +197,15 @@ class MainWindow(QMainWindow):
             myPeople[objectID] = [pred_name, suhu]
             if len(myPeople) == 0:
                 continue
+            elif myPeople[objectID] is not None and pred_name is None:
+                continue
             else:
                 try:
                     draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
-                    print('try thus')
+                    print('try this')
                 except:
-                    if pred_name == myPeople[objectID-1][0]:
-                        myPeople[objectID] = [pred_name, suhu]
-                        del myPeople[objectID-1]
-                        draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
-                    else:
-                        draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                    myPeople[objectID] = [pred_name, suhu]
+                    draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
             
