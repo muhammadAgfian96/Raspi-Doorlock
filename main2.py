@@ -42,7 +42,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
-ct = CentroidTracker(maxDisappeared=4)
+ct = CentroidTracker(maxDisappeared=16)
 myPeople = {}
 
 
@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
                 for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
                     # if (objectID not in myPeople.keys()):
                     myPeople[objectID] = [pred_name, suhu]
+                    print("capture -->", myPeople, pred_name)
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
                     
@@ -191,6 +192,8 @@ class MainWindow(QMainWindow):
         # ---- TRACKING 
         obj_center, obj_bbox = ct.update(boxes)
         
+        self.deleteExpireObject(myPeople, obj_center)
+        print("HEYY",myPeople, obj_center, pred_name)
         # draw bbox
         for ((objectID, centroid), (_, single_bbox)) in zip(obj_center.items(), obj_bbox.items()):
             print(myPeople, objectID)
@@ -223,7 +226,12 @@ class MainWindow(QMainWindow):
         qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
-        
+    
+    def deleteExpireObject(self, myObj, trackingObj):
+        diff = set(list(myObj.keys())).difference(list(trackingObj.keys()))
+        for i in diff:
+            del myObj[i]
+
 
     def processing_sensors(self):
         if on_RPi:
