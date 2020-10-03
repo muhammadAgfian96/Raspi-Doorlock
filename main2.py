@@ -180,6 +180,7 @@ class MainWindow(QMainWindow):
             if bbox is not None:
 
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
+                futureObj = self.getNewObject(myPeople, obj_center)
 
                 print('# check future', futureObj)
                 for (objectID, centroid) in obj_center.items():
@@ -190,13 +191,12 @@ class MainWindow(QMainWindow):
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
 
-                futureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
                 getData = True
         else:
             pred_name='face'
             suhu = 36.8
             obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
-            futureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+            futureObj = self.getNewObject(myPeople, obj_center)
 
             for (objectID, centroid) in obj_center.items():
                 myPeople[objectID] = [str(objectID)+'_face', suhu]
@@ -206,9 +206,8 @@ class MainWindow(QMainWindow):
         if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
             print('# Global Tracking')
             obj_center, obj_bbox = ct.update(boxes)
-            # rawFutureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
-            # if rawFutureObj is not None:
-            #     futureObj = rawFutureObj
+            self.deleteExpireObject(myPeople, obj_center)
+
 
         print("HEYY", myPeople, obj_center, pred_name)
         # draw bbox
@@ -242,18 +241,20 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
     
-    def deleteExpireObjectAndGetNewObj(self, myObj, trackingObj):
+    def getNewObject(self, myObj, trackingObj):
         diff = set(myObj.keys()).difference(trackingObj.keys())
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
-        #print("---->", futureObj, "|", diff,"|\n--->   ", myObj,">",trackingObj)
-        #time.sleep(1.0)
-        for i in diff:
-            del myObj[i]
         for i in futureObject:
             myObj[i] = ['saha?', 'ERR']
 
-        # print("--->", futureObjt, diff)
         return futureObject
+
+    def deleteExpireObject(self, myObj, trackingObj):
+        diff = set(myObj.keys()).difference(trackingObj.keys())
+        for i in diff:
+            del myObj[i]
+
+    
 
     def processing_sensors(self):
         if on_RPi:
