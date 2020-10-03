@@ -46,7 +46,7 @@ suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
 myPeople = OrderedDict()
 getData = False
-futureObj = 0
+futureObj = set()
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -183,10 +183,11 @@ class MainWindow(QMainWindow):
                 futureObj = self.getNewObject(myPeople, obj_center)
 
                 print('# check future', futureObj)
-                for (objectID, centroid) in obj_center.items():
-                    if futureObj == objectID and myPeople[objectID] == 'saha?':
-                        myPeople[objectID] = [pred_name, suhu]
-                    # print("capture -->", myPeople, pred_name)
+                if len(futureObj) != 0:
+                    for (objectID, centroid) in obj_center.items():
+                        if list(futureObj)[0] == objectID and myPeople[objectID] == 'saha?':
+                            myPeople[objectID] = [pred_name, suhu]
+                        # print("capture -->", myPeople, pred_name)
 
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
@@ -215,15 +216,11 @@ class MainWindow(QMainWindow):
             print("test",myPeople, objectID)
             if len(myPeople) == 0:
                 continue
-            elif myPeople[objectID] is not None:
+            elif objectID  myPeople.keys():
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
             else:
-                try:
-                    draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
-                    print('try this')
-                except:
-                    myPeople[objectID] = [pred_name, suhu]
-                    draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                myPeople[objectID] = ['ga kenal', 'ERR']
+                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
         FPS =  1/ (time.time()-start_time)     
@@ -242,12 +239,11 @@ class MainWindow(QMainWindow):
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
     
     def getNewObject(self, myObj, trackingObj):
-        diff = set(myObj.keys()).difference(trackingObj.keys())
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
         for i in futureObject:
             myObj[i] = ['saha?', 'ERR']
 
-        return futureObject
+        return futureObject, myObj
 
     def deleteExpireObject(self, myObj, trackingObj):
         diff = set(myObj.keys()).difference(trackingObj.keys())
