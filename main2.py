@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
             path_cam1 = 'http://11.11.11.12:8555' 
             self.cap = VideoStream(src=path_cam1).start()
         else:
+            print('TEST')
             path_cam1 = 0
             self.cap = VideoStream(src=path_cam1, usePiCamera=False).start()
 
@@ -189,28 +190,27 @@ class MainWindow(QMainWindow):
                 if pred_name.lower() != "unknown":
                     self.insert_list(pred_name)
 
-                self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+                futureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
                 getData = True
         else:
             pred_name='face'
             suhu = 36.8
             obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
-            # print(myPeople)
-            self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+            futureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
 
             for (objectID, centroid) in obj_center.items():
                 myPeople[objectID] = [str(objectID)+'_face', suhu]
         
-        # ---- TRACKING 
+        # ---- TRACKING
         
-        if (self.count_FPS % 2 == 0) or start_time-time.time() < 3:
+        if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
             print('# Global Tracking')
             obj_center, obj_bbox = ct.update(boxes)
-            rawFutureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
-            if rawFutureObj is not None:
-                futureObj = rawFutureObj
+            # rawFutureObj = self.deleteExpireObjectAndGetNewObj(myPeople, obj_center)
+            # if rawFutureObj is not None:
+            #     futureObj = rawFutureObj
 
-        print("HEYY",myPeople, obj_center, pred_name)
+        print("HEYY", myPeople, obj_center, pred_name)
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             print("test",myPeople, objectID)
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
 
 
         FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 1.2)
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 1)
         if self.count_FPS == 70:
             self.count_FPS =0
         
@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
         #time.sleep(1.0)
         for i in diff:
             del myObj[i]
-        for i in futureObj:
+        for i in futureObject:
             myObj[i] = ['saha?', 'ERR']
 
         # print("--->", futureObjt, diff)

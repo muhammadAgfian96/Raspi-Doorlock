@@ -190,8 +190,8 @@ class CamTherm(AMG8833):
         
         pixels_2d[logical_greater] = greater
         pixels_2d[logical_minor] = minor
-        print(rata2)        
-        print(np.array(list(pixels_list)).reshape(-1,1).shape)
+        # print(rata2)        
+        # print(np.array(list(pixels_list)).reshape(-1,1).shape)
         pixels_1d = pixels_2d.reshape((1, max(np.array(list(pixels_list)).reshape(-1,1).shape)))
         
         return pixels_2d, list(pixels_1d[0]), rata2
@@ -201,7 +201,7 @@ class CamTherm(AMG8833):
         #print(pixels_origin, type(pixels_origin))
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
-        print(pixels_origin, type(pixels_origin))
+        # print(pixels_origin, type(pixels_origin))
 
         pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_origin]
 
@@ -210,7 +210,7 @@ class CamTherm(AMG8833):
 
         #--- proses kalibrasi
         suhu = np.max(pixels_origin)
-        print(suhu)
+        # print(suhu)
 
         #draw everything
         data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
