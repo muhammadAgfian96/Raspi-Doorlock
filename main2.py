@@ -184,6 +184,7 @@ class MainWindow(QMainWindow):
 
                 print('# check future', futureObj)
                 if len(futureObj) != 0:
+                    print("masuk nih")
                     for (objectID, centroid) in obj_center.items():
                         if list(futureObj)[0] == objectID and myPeople[objectID][0] == 'ga kenal':
                             myPeople[objectID] = [pred_name, suhu]
@@ -222,8 +223,9 @@ class MainWindow(QMainWindow):
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
             else:
                 print("in 3")
-                myPeople[objectID] = ['ga kenal', 'ERR']
-                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                continue
+                #myPeople[objectID] = ['ga kenal', 'ERR']
+                #draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
         FPS =  1/ (time.time()-start_time)     
