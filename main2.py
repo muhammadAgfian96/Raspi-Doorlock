@@ -180,12 +180,12 @@ class MainWindow(QMainWindow):
             if bbox is not None:
 
                 obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
-                futureObj = self.getNewObject(myPeople, obj_center)
+                futureObj, myPeople = self.getNewObject(myPeople, obj_center)
 
                 print('# check future', futureObj)
                 if len(futureObj) != 0:
                     for (objectID, centroid) in obj_center.items():
-                        if list(futureObj)[0] == objectID and myPeople[objectID] == 'saha?':
+                        if list(futureObj)[0] == objectID and myPeople[objectID][0] == 'ga kenal':
                             myPeople[objectID] = [pred_name, suhu]
                         # print("capture -->", myPeople, pred_name)
 
@@ -215,10 +215,13 @@ class MainWindow(QMainWindow):
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             print("test",myPeople, objectID)
             if len(myPeople) == 0:
+                print("in 1")
                 continue
-            elif objectID  myPeople.keys():
+            elif objectID in myPeople.keys():
+                print("in 2")
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
             else:
+                print("in 3")
                 myPeople[objectID] = ['ga kenal', 'ERR']
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
@@ -241,7 +244,7 @@ class MainWindow(QMainWindow):
     def getNewObject(self, myObj, trackingObj):
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
         for i in futureObject:
-            myObj[i] = ['saha?', 'ERR']
+            myObj[i] = ['ga kenal', 'ERR']
 
         return futureObject, myObj
 
