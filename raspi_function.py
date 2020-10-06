@@ -164,7 +164,8 @@ def main_vision():
         list_pred_name, list_bboxes  = rcvMsgJSON()
         print(pred_name, pred_bbox)
         
-        for regonized_name in list_pred_name:
+        for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
+            id_name = int(np.array(single_bbox).sum()[0])
             if regonized_name.lower() == "unknown":
                 #socket.send(b"High")
                 print("Unknown, Not Open")
@@ -174,8 +175,9 @@ def main_vision():
             elif regonized_name.lower() != "unknown":
                 print(f"Silahkan Masuk {pred_name}!")
                 open_status_face = True
+                dict_name[id_name] = regonized_name 
 
-    except zmq.Again as e:
+    except zmq.Again as e:  
         # print("-- no received")
         pred_bbox = None
     
@@ -183,7 +185,7 @@ def main_vision():
     if pred_bbox is None:
         return None, None
     else:
-        return list_bboxes, list_pred_name
+        return list_bboxes, dict_name
         
 
 def main_input():

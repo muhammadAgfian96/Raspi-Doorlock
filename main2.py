@@ -184,20 +184,17 @@ class MainWindow(QMainWindow):
             
             self.count_FPS+=1
 
-            list_bboxes, list_pred_name = rpi.main_vision()
+            obj_center, obj_bbox = ct.update(boxes)
+            
+            list_bboxes, dict_name = rpi.main_vision()
             if bbox is not None:
-
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                futureObj, myPeople = self.getNewObject(myPeople, obj_center)
-                
-                print('# check future', futureObj)
-                if len(futureObj) != 0:
-                    print("masuk nih")
-                for (objectID, centroid), recognized_name in zip(obj_center.items(), list_pred_name):
-                    myPeople[objectID] = [recognized_name, suhu]
-                    self.insert_list(recognized_name)
 
-
+                for (objectID, single_bbox) in obj_bbox.items():
+                    id_name = int(np.array(single_bbox).sum()[0])
+                    single_name = dict_name[id_name]
+                    myPeople[objectID] = [single_name, suhu]
+                    self.insert_list(single_name)
                 getData = True
         else:
             pred_name='face'
@@ -211,9 +208,9 @@ class MainWindow(QMainWindow):
         # ---- TRACKING
         
         if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
-            print('# Global Tracking')
             obj_center, obj_bbox = ct.update(boxes)
             self.deleteExpireObject(myPeople, obj_center)
+            print('# Global Tracking', obj_center)
 
 
         print("HEYY", myPeople, obj_center, pred_name)
