@@ -199,11 +199,11 @@ class MainWindow(QMainWindow):
         else:
             pred_name='face'
             suhu = 36.8
-            obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
-            futureObj = self.getNewObject(myPeople, obj_center)
+            # obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
+            # futureObj = self.getNewObject(myPeople, obj_center)
 
-            for (objectID, centroid) in obj_center.items():
-                myPeople[objectID] = [str(objectID)+'_face', suhu]
+            # for (objectID, centroid) in obj_center.items():
+            #     myPeople[objectID] = [str(objectID)+'_face', suhu]
         
         # ---- TRACKING
         
@@ -213,25 +213,25 @@ class MainWindow(QMainWindow):
             print('# Global Tracking', obj_center)
 
 
-        print("HEYY", myPeople, obj_center)
+        print("HEYY", myPeople, obj_center, boxes)
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
-            print("test",myPeople, objectID)
-            if len(myPeople) == 0:
-                print("in 1")
-                continue
-            elif objectID in myPeople.keys():
-                print("in 2")
+            print("test", myPeople, objectID)
+            if objectID in myPeople.keys():
+                print("in 1 : ada kotak dan nama")
                 draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+            elif len(boxes) != 0:
+                print("in 2 : ada kotak, nama tidak ada")
+                draw_box_name(single_bbox, '_', image, suhu=suhu)
             else:
-                print("in 3")
+                print("in 3 : ", len(boxes))
                 continue
                 #myPeople[objectID] = ['ga kenal', 'ERR']
                 #draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
         FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 1)
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
         if self.count_FPS == 70:
             self.count_FPS = 0
         
@@ -257,17 +257,9 @@ class MainWindow(QMainWindow):
         for i in diff:
             del myObj[i]
 
-    
-
     def processing_sensors(self):
         if on_RPi:
             rpi.main_input()
-        
-
-    #def processing_output(self):
-    #    if on_RPi:
-    #        rpi.main_output()
-        
 
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%H:%M"))
