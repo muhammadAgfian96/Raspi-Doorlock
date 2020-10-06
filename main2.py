@@ -187,11 +187,11 @@ class MainWindow(QMainWindow):
             obj_center, obj_bbox = ct.update(boxes)
             
             list_bboxes, dict_name = rpi.main_vision()
-            if bbox is not None:
+            if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
 
                 for (objectID, single_bbox) in obj_bbox.items():
-                    id_name = int(np.array(single_bbox).sum()[0])
+                    id_name = int(np.array(single_bbox).sum())
                     single_name = dict_name[id_name]
                     myPeople[objectID] = [single_name, suhu]
                     self.insert_list(single_name)
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
             print('# Global Tracking', obj_center)
 
 
-        print("HEYY", myPeople, obj_center, pred_name)
+        print("HEYY", myPeople, obj_center)
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             print("test",myPeople, objectID)

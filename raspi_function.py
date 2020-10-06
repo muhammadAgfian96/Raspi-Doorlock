@@ -14,7 +14,7 @@ from utils import sensors
 import json
 import time
 from time import sleep     # Import the sleep function from the time module
-
+import numpy as np
 
 import RPi.GPIO as GPIO
 GPIO.setwarnings(False)    # Ignore warning for now
@@ -83,7 +83,7 @@ signal_open = 0
 door_time = time.time()
 state_time_btn = time.time()
 state_time_sJarak = time.time()
-
+dict_name = {}
 
 def display(pesan):
     pass
@@ -159,13 +159,13 @@ def getThermalArray():
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
-    global old_time, first_time, start_time
+    global old_time, first_time, start_time, dict_name
+    list_bboxes = []
     try:
         list_pred_name, list_bboxes  = rcvMsgJSON()
-        print(pred_name, pred_bbox)
         
         for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
-            id_name = int(np.array(single_bbox).sum()[0])
+            id_name = int(np.array(single_bbox).sum())
             if regonized_name.lower() == "unknown":
                 #socket.send(b"High")
                 print("Unknown, Not Open")
@@ -173,16 +173,16 @@ def main_vision():
                 display("Silakan Hubungi Petugas")
 
             elif regonized_name.lower() != "unknown":
-                print(f"Silahkan Masuk {pred_name}!")
+                print(f"Silahkan Masuk {regonized_name}!")
                 open_status_face = True
                 dict_name[id_name] = regonized_name 
 
     except zmq.Again as e:  
         # print("-- no received")
-        pred_bbox = None
+        list_bboxes = []
     
     main_output()
-    if pred_bbox is None:
+    if len(list_bboxes) == 0:
         return None, None
     else:
         return list_bboxes, dict_name
