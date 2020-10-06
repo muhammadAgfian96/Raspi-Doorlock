@@ -120,13 +120,27 @@ def rcvMsg():
     return name, bbox
 
 def rcvMsgJSON():
+    """
+    data from server receive a dictionary/JSON data = {
+        'topic' : is filter for sending message
+        'bboxes': list of list bbox
+        'names' : list of name prediction
+        'acc'   : list of accuracy by name
+        'time'  : time to send this data
+    }
+
+    - return:
+        @ array names. ex: ['name_1', 'name_2']
+        @ array boxes. ex: [[1,2,3,4],[4,5,6,7]]
+    """
+
     data = socket.recv_multipart(flags=zmq.NOBLOCK)
-    print(data)
+    #print(data)
     #data = json.loads(msg)
     data = json.loads(data[1])
     data = edict(data)
-    print("JSON data:\n", type(data), data)
-    return data.name, data.bbox
+    print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
+    return data.names, data.bboxes
     
 def getThermalArray():
     arrayTherm = thermalCam.getThermal()
@@ -147,18 +161,19 @@ def main_vision():
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
     global old_time, first_time, start_time
     try:
-        pred_name, pred_bbox  = rcvMsgJSON()
+        list_pred_name, list_bboxes  = rcvMsgJSON()
         print(pred_name, pred_bbox)
         
-        if pred_name.lower() == "unknown":
-            #socket.send(b"High")
-            print("Unknown, Not Open")
-            open_status_face = False
-            display("Silakan Hubungi Petugas")
+        for regonized_name in list_pred_name:
+            if regonized_name.lower() == "unknown":
+                #socket.send(b"High")
+                print("Unknown, Not Open")
+                open_status_face = False
+                display("Silakan Hubungi Petugas")
 
-        elif pred_name.lower() != "unknown":
-            print(f"Silahkan Masuk {pred_name}!")
-            open_status_face = True
+            elif regonized_name.lower() != "unknown":
+                print(f"Silahkan Masuk {pred_name}!")
+                open_status_face = True
 
     except zmq.Again as e:
         # print("-- no received")
@@ -168,7 +183,7 @@ def main_vision():
     if pred_bbox is None:
         return None, None
     else:
-        return [pred_bbox], pred_name
+        return list_bboxes, list_pred_name
         
 
 def main_input():

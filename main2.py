@@ -37,6 +37,8 @@ import time
 import datetime
 
 
+# global variabel
+
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
          'Nov', 'Dec']
@@ -44,9 +46,15 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 arrayTherm = np.zeros((240,240,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
-myPeople = OrderedDict()
 getData = False
+
+
 futureObj = set()
+myPeople = OrderedDict()
+
+obj_center = {}
+obj_bbox = {}
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -176,22 +184,19 @@ class MainWindow(QMainWindow):
             
             self.count_FPS+=1
 
-            bbox, pred_name = rpi.main_vision()
+            list_bboxes, list_pred_name = rpi.main_vision()
             if bbox is not None:
 
-                obj_center, obj_bbox = ct.update(bbox) # ---- TRACKING 
+                obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 futureObj, myPeople = self.getNewObject(myPeople, obj_center)
-
+                
                 print('# check future', futureObj)
                 if len(futureObj) != 0:
                     print("masuk nih")
-                    for (objectID, centroid) in obj_center.items():
-                        if list(futureObj)[0] == objectID and myPeople[objectID][0] == 'ga kenal':
-                            myPeople[objectID] = [pred_name, suhu]
-                        # print("capture -->", myPeople, pred_name)
+                for (objectID, centroid), recognized_name in zip(obj_center.items(), list_pred_name):
+                    myPeople[objectID] = [recognized_name, suhu]
+                    self.insert_list(recognized_name)
 
-                if pred_name.lower() != "unknown":
-                    self.insert_list(pred_name)
 
                 getData = True
         else:
@@ -231,7 +236,7 @@ class MainWindow(QMainWindow):
         FPS =  1/ (time.time()-start_time)     
         cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 1)
         if self.count_FPS == 70:
-            self.count_FPS =0
+            self.count_FPS = 0
         
         
 
