@@ -75,20 +75,20 @@ class Jarak():
         time.sleep(0.00001) 
         GPIO.output(self.__pTrig, False)
 
-        #startTime = time.time() 
-        #stopTime = time.time()
+        timeStartJarak = time.time()
+        timeStopJarak = time.time()
 
         # save start time
         runTimeStart = time.time()
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
-            if timeStartJarak - runTimeStart > 0.25:
+            if timeStartJarak - runTimeStart > 0.15:
                 print('[Error Sensors] Timeout 0 Jarak!')
                 return 60
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
             timeStopJarak = time.time()
-            if timeStopJarak - runTimeStart > 0.25:
+            if timeStopJarak - runTimeStart > 0.15:
                 print('[Error Sensors] Timeout 1 Jarak!')
                 return 60
         # time difference between start and arrival 
@@ -195,30 +195,89 @@ class CamTherm(AMG8833):
         
         return pixels_2d, list(pixels_1d[0]), rata2
 
-    def getThermal(self,):
-        pixels_origin = self._cam.read_temp()
-        #print(pixels_origin, type(pixels_origin))
+    def _thermalToImageAndData(self, pixelsThermal, ukuranGrid=240j, MINTEMP = 25, MAXTEMP = 35):
+        """
+        This is for for resize the data
+        
+        Arguments:
+            @ pixels_list (list) : list data from amgg8833 len data is 64,
+            @ besar (bilangan kompleks) : menentukan ukuran
+        return:
+            @ bicubic = array hasil perbesaran data
+        """
+        
+        def constrain(val, min_val, max_val):
+            return min(max_val, max(min_val, val))
 
-        pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
-        # print(pixels_origin, type(pixels_origin))
+        def map(x, in_min, in_max, out_min, out_max):
+            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-        pixels = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixels_origin]
+        COLORDEPTH = 130
+        start_color = Color("indigo")
+        
+        sisi = int(ukuranGrid.imag)
+        height = sisi
+        width = sisi
+        
+        displayPixelWidth = width / 30
+        displayPixelHeight = height / 30
+        
+        points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
+        grid_x, grid_y = np.mgrid[0:7:ukuranGrid, 0:7:ukuranGrid]
+        colors = list(start_color.range_to(Color("red"), COLORDEPTH))
+        colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in colors]
+        bicubicData = griddata(points, pixelsThermal, (grid_x, grid_y), method='cubic')    
+        
+        
+        pixelsThermal = [map(p, MINTEMP, MAXTEMP, 0, COLORDEPTH - 1) for p in pixelsThermal]
+        bicubicImage = griddata(points, pixelsThermal, (grid_x, grid_y), method='cubic')
 
-        #perdorm interpolation
-        bicubic = griddata(self._points, pixels, (self._grid_x, self._grid_y), method='cubic')
+        data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
+        print("bicubic shape",bicubicImage.shape)
 
-        #--- proses kalibrasi
-        suhu = np.max(pixels_origin)
-        # print(suhu)
-
-        #draw everything
-        data_img = np.zeros((bicubic.shape[0],bicubic.shape[1],3), dtype=np.uint8)
-        for ix, row in enumerate(bicubic):
-            for jx, pixel in enumerate(row):
-                r,g,b = self._colors[self._constrain(int(pixel), 0, self._COLORDEPTH- 1)]
+        for ix, row in enumerate(bicubicImage):
+            for jx, pixelsThermal in enumerate(row):
+                r,g,b = colors[constrain(int(pixelsThermal), 0, COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
-        # pygame.display.update()
+
         data_img = np.rot90(data_img, k=1)
         data_img = np.flip(data_img, 1)
+        return data_img, bicubicData
 
-        return data_img, suhu
+    def cropImageData(self, imageData, xy, x2y2):
+        """
+        Arguments:
+            xy = [x1, y1]
+            x2y2 = [x2, y2]
+        """
+        return imageData[xy[1]:x2y2[1], xy[0]:x2y2[0]]
+
+    def getMaxCoordinate(self, cropThermal):
+        maxValue = np.max(cropThermal)
+        (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
+        return maxValue, (x,y)
+
+
+    def getThermal(self, image, bboxes):
+        """
+        return:
+            - data_image    : numpy array 2d data image
+            - bicubicData   : numpy array 2D data thermal
+            - dictSuhu      : > key     --> sum of bbox
+                              > values  --> maximum value
+        """
+        dictSuhu = {}
+
+        pixels_origin = self._cam.read_temp()
+
+        pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
+
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=400j)
+
+        for bbox in bboxes:
+            id_sum = int(np.array(bbox).sum())
+            singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
+            dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
+        print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
+        return imageThermal, dataThermal, dictSuhu

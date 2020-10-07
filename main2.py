@@ -13,9 +13,6 @@ from ui_main2 import Ui_MainWindow
 # Raspi Sensors and Actuators
 from ui_functions import *
 
-
-
-
 try:
     import RPi.GPIO as gpio
     on_RPi = True
@@ -38,12 +35,11 @@ import datetime
 
 
 # global variabel
-
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
          'Nov', 'Dec']
 
-arrayTherm = np.zeros((240,240,3))
+imageThermal = np.zeros((240,240,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
 getData = False
@@ -74,9 +70,6 @@ class MainWindow(QMainWindow):
 
         time.sleep(2.0)
 
-        # self.cap = cv2.VideoCapture(path_cam1)
-        # time.sleep(1)
-
         # vision opetarion
         self.streamCamera = QTimer()
         self.streamCamera.start(20)
@@ -86,12 +79,6 @@ class MainWindow(QMainWindow):
         self.streamSensors = QTimer()
         self.streamSensors.start(10)
         self.streamSensors.timeout.connect(self.processing_sensors)
-
-        # output operation
-        #self.streamActuators = QTimer()
-        #self.streamActuators.start(5)
-        #self.streamActuators.timeout.connect(self.processing_output)
-
 
         # for update time on display
         self.streamDate = QTimer()
@@ -139,6 +126,18 @@ class MainWindow(QMainWindow):
         image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         return image
 
+    def overlayImage(self, mainImage, transparentImage, alpha=0.3, ):
+        # -------- overlay thermal ----------
+        y_offset=mainImage.shape[0]-transparentImage.shape[0]
+        x_offset=0
+
+        output = mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
+        cv2.addWeighted(transparentImage, alpha, output, 1 - alpha, 0, output)
+        mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
+        return mainImage
+
+
+
     def stream_camera_on(self):
         global arrayTherm, suhu, ct, myPeople, getData, futureObj
 
@@ -159,34 +158,20 @@ class MainWindow(QMainWindow):
 
         h_img, w_img, ch = image.shape
 
+        obj_center, obj_bbox = ct.update(boxes)
         # ------- Function for Doorlock --------
         if on_RPi:
-            if self.count_FPS % 7 == 0 :
-                arrayTherm, suhu = rpi.thermalCam.getThermal()
-
-                # -------- overlay thermal ----------
-                y_offset=image.shape[0]-arrayTherm.shape[0]
-                x_offset=0
-
-                alpha = 0.5
-                output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-                cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-                image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-
-            else:
-                y_offset=image.shape[0]-arrayTherm.shape[0]
-                x_offset=0
-                alpha = 0.5
-
-                output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-                cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-                image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-            
-            self.count_FPS+=1
-
-            obj_center, obj_bbox = ct.update(boxes)
-            
             list_bboxes, dict_name = rpi.main_vision()
+
+            if self.count_FPS % 7 == 0:
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, list_bboxes)
+                image = self.overlayImage(image, imageThermal,)
+                print('update thermal')
+            else:
+                image = self.overlayImage(image, imageThermal,)
+
+
+            self.count_FPS+=1
             # print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
@@ -197,13 +182,12 @@ class MainWindow(QMainWindow):
                         single_name = dict_name[id_name]
                         myPeople[objectID] = [single_name, suhu]
                         self.insert_list(single_name)
-                getData = True
+
         else:
             pred_name='face'
             suhu = 36.8
         
         # ---- TRACKING
-        
         if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
             obj_center, obj_bbox = ct.update(boxes)
             self.deleteExpireObject(myPeople, obj_center)
@@ -223,8 +207,6 @@ class MainWindow(QMainWindow):
             else:
                 print("in 3 : ", len(boxes))
                 continue
-                #myPeople[objectID] = ['ga kenal', 'ERR']
-                #draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
 
 
         FPS =  1/ (time.time()-start_time)     
@@ -270,7 +252,7 @@ class MainWindow(QMainWindow):
     
     def insert_list(self,nama):
         time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
-        self.ui.lbl_name_recog.setText("{} @ {}".format(nama, time_masuk) )
+        self.ui.lbl_name_recog.setText("{} @ {}".format(nama, time_masuk))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -280,4 +262,3 @@ if __name__ == "__main__":
     if on_RPi:
         window.showFullScreen()
     sys.exit(app.exec_())
-
