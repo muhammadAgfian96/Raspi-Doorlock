@@ -7,6 +7,7 @@ import numpy as np
 from scipy.interpolate import griddata
 import math
 from colour import Color
+from numpy import unravel_index
 
 
 
@@ -274,10 +275,13 @@ class CamTherm(AMG8833):
 
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=400j)
 
-        for bbox in bboxes:
-            id_sum = int(np.array(bbox).sum())
-            singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
-            maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
-            dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
-        print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
-        return imageThermal, dataThermal, dictSuhu
+        if bboxes is not None:
+            for bbox in bboxes:
+                id_sum = int(np.array(bbox).sum())
+                singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+                maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
+                dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
+            print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
+            return imageThermal, dataThermal, dictSuhu
+        else:
+            return np.zeros((400,400,3)), np.zeros((400,400,3)), dictSuhu

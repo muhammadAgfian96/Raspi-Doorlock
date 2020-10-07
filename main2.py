@@ -144,8 +144,8 @@ class MainWindow(QMainWindow):
         # read image in BGR format
         image = self.cap.read()
         start_time = time.time()
-
-        image = imutils.resize(image, width=400) # for face
+        image = cv2.resize(image, (400,400))
+        # image = imutils.resize(image, width=400) # for face
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
