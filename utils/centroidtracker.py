@@ -132,6 +132,15 @@ class CentroidTracker():
 				# set its new centroid, and reset the disappeared
 				# counter
 				objectID = objectIDs[row]
+
+				array_origin = np.array([self.objects[objectID]])
+				# array_origin = np.array([array_origin])
+				array_input = np.array([inputCentroids[col]])
+				# print("~!@#$%^&* selisih,",array_origin, array_input,self.objects[objectID])
+				selisih = dist.cdist(array_origin, array_input)
+				# print(">>>>>>>>>>>>>>> selisih,",selisih)
+				if selisih > 50:
+					continue
 				self.objects[objectID] = inputCentroids[col]
 				self.boxesObj[objectID] = bboxTrack[col]
 				# self.name[objectID] = nameTrack[col] 

@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
             print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-
+                print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
                     id_name = int(np.array(single_bbox).sum())
                     single_name = dict_name[id_name]
