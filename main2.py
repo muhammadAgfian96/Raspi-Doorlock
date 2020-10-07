@@ -187,10 +187,10 @@ class MainWindow(QMainWindow):
             obj_center, obj_bbox = ct.update(boxes)
             
             list_bboxes, dict_name = rpi.main_vision()
-            print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
+            # print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
+                # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
                     id_name = int(np.array(single_bbox).sum())
                     if id_name in list(dict_name.keys()):
@@ -201,11 +201,6 @@ class MainWindow(QMainWindow):
         else:
             pred_name='face'
             suhu = 36.8
-            # obj_center, obj_bbox = ct.update(boxes) # ---- TRACKING 
-            # futureObj = self.getNewObject(myPeople, obj_center)
-
-            # for (objectID, centroid) in obj_center.items():
-            #     myPeople[objectID] = [str(objectID)+'_face', suhu]
         
         # ---- TRACKING
         
