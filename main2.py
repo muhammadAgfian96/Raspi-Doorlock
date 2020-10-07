@@ -187,6 +187,7 @@ class MainWindow(QMainWindow):
             obj_center, obj_bbox = ct.update(boxes)
             
             list_bboxes, dict_name = rpi.main_vision()
+            print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
 

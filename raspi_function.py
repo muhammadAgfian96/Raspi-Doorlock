@@ -182,6 +182,7 @@ def main_vision():
         list_bboxes = []
     
     main_output()
+    print('\n>>>>>>>>\n raspi_function.py dict_name:', dict_name, '\n>>>>>>>>')
     if len(list_bboxes) == 0:
         return None, None
     else:
