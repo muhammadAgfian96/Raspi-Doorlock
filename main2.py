@@ -126,17 +126,25 @@ class MainWindow(QMainWindow):
         image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         return image
 
-    def overlayImage(self, mainImage, transparentImage, alpha=0.5):
+    def overlayImageSize(self, mainImage, transparentImage, alpha=0.5):
         # -------- overlay thermal ----------
         y_offset=mainImage.shape[0]-transparentImage.shape[0]
         x_offset=0
-        output = mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
-        output = cv2.addWeighted(transparentImage, alpha, mainImage, 1 - alpha, 0, mainImage, dtype = cv2.CV_32F)
+        output = mainImage[y_offset:y_offset+mainImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
+        output=cv2.addWeighted(transparentImage, alpha, output, 1 - alpha, 0, output, dtype = cv2.CV_32F)
         mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
         return mainImage
 
 
-
+    def overlayImage(self, basicImage, transparantImage, alpha=0.3):
+        y_offset=basicImage.shape[0]-transparantImage.shape[0]
+        x_offset=0
+        output = basicImage[y_offset:basicImage.shape[0], x_offset:x_offset+transparantImage.shape[1]] 
+        output = cv2.addWeighted(transparantImage, alpha, output, 1 - alpha, 0, output, dtype = cv2.CV_32F)
+        basicImage[y_offset:basicImage.shape[0], x_offset:x_offset+transparantImage.shape[1]] = output
+        #print("overlay",transparantImage.shape, basicImage.shape)
+        return basicImage
+        
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
 
