@@ -282,6 +282,4 @@ class CamTherm(AMG8833):
                 maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
                 dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
             print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
-            return imageThermal, dataThermal, dictSuhu
-        else:
-            return np.zeros((400,400,3)), np.zeros((400,400,3)), dictSuhu
+        return imageThermal, dataThermal, dictSuhu

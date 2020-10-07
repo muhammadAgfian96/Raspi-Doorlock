@@ -39,7 +39,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
          'Nov', 'Dec']
 
-imageThermal = np.zeros((240,240,3))
+imageThermal = np.zeros((400,400,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
 getData = False
@@ -126,20 +126,26 @@ class MainWindow(QMainWindow):
         image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         return image
 
-    def overlayImage(self, mainImage, transparentImage, alpha=0.3, ):
+    def overlayImage(self, mainImage, transparentImage, alpha=0.3):
+        print('main image type', type(mainImage), mainImage.shape)
+        print('transparentImage', type(transparentImage), transparentImage.shape)
         # -------- overlay thermal ----------
         y_offset=mainImage.shape[0]-transparentImage.shape[0]
         x_offset=0
-
+        print(y_offset, transparentImage.shape[0])
         output = mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
-        cv2.addWeighted(transparentImage, alpha, output, 1 - alpha, 0, output)
-        mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
+        print(output.shape)
+        #cv2.imshow('output', output)
+        #cv2.imshow('trans', transparentImage)
+        #cv2.waitKey(0)
+        mainImage = cv2.addWeighted(transparentImage, alpha, mainImage, 1 - alpha, 0, mainImage, dtype = cv2.CV_32F)
+        #mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
         return mainImage
 
 
 
     def stream_camera_on(self):
-        global arrayTherm, suhu, ct, myPeople, getData, futureObj
+        global imageThermal, suhu, ct, myPeople, getData, futureObj
 
         # read image in BGR format
         image = self.cap.read()
@@ -163,12 +169,13 @@ class MainWindow(QMainWindow):
         if on_RPi:
             list_bboxes, dict_name = rpi.main_vision()
 
-            if self.count_FPS % 7 == 0:
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, list_bboxes)
-                image = self.overlayImage(image, imageThermal,)
+            if self.count_FPS % 7 == 0 or start_time<5:
                 print('update thermal')
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, list_bboxes)
+                image = self.overlayImage(image, imageThermal)
+                
             else:
-                image = self.overlayImage(image, imageThermal,)
+                image = self.overlayImage(image, imageThermal)
 
 
             self.count_FPS+=1
