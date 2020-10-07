@@ -126,20 +126,13 @@ class MainWindow(QMainWindow):
         image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
         return image
 
-    def overlayImage(self, mainImage, transparentImage, alpha=0.3):
-        print('main image type', type(mainImage), mainImage.shape)
-        print('transparentImage', type(transparentImage), transparentImage.shape)
+    def overlayImage(self, mainImage, transparentImage, alpha=0.5):
         # -------- overlay thermal ----------
         y_offset=mainImage.shape[0]-transparentImage.shape[0]
         x_offset=0
-        print(y_offset, transparentImage.shape[0])
         output = mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
-        print(output.shape)
-        #cv2.imshow('output', output)
-        #cv2.imshow('trans', transparentImage)
-        #cv2.waitKey(0)
-        mainImage = cv2.addWeighted(transparentImage, alpha, mainImage, 1 - alpha, 0, mainImage, dtype = cv2.CV_32F)
-        #mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
+        output = cv2.addWeighted(transparentImage, alpha, mainImage, 1 - alpha, 0, mainImage, dtype = cv2.CV_32F)
+        mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
         return mainImage
 
 
@@ -169,7 +162,7 @@ class MainWindow(QMainWindow):
         if on_RPi:
             list_bboxes, dict_name = rpi.main_vision()
 
-            if self.count_FPS % 7 == 0 or start_time<5:
+            if self.count_FPS % 7 == 0:
                 print('update thermal')
                 imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, list_bboxes)
                 image = self.overlayImage(image, imageThermal)

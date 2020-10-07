@@ -273,7 +273,7 @@ class CamTherm(AMG8833):
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
 
-        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=400j)
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=240j)
 
         if bboxes is not None:
             for bbox in bboxes:
