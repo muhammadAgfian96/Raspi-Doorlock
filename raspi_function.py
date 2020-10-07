@@ -161,6 +161,7 @@ def main_vision():
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
     global old_time, first_time, start_time, dict_name
     list_bboxes = []
+    dict_name = {}
     try:
         list_pred_name, list_bboxes  = rcvMsgJSON()
         
