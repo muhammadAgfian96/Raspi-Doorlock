@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
         cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
         if self.count_FPS == 70:
             self.count_FPS = 0
-        
+            # tanda commit terbaru
         
 
         # get image infos
