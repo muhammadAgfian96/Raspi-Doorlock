@@ -144,10 +144,10 @@ def rcvMsgJSON():
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
-    global old_time, first_time, start_time, dict_name
+    global old_time, first_time, start_time
     list_bboxes = []
-    dict_name = {}
     try:
+        dict_name = {}
         list_pred_name, list_bboxes  = rcvMsgJSON()
         
         for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):

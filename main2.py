@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
         
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
-        global dict_suhu
+        global dict_suhu, obj_bbox, obj_center
 
         # read image in BGR format
         image = self.cap.read()
@@ -151,12 +151,12 @@ class MainWindow(QMainWindow):
             list_bboxes, dict_name = rpi.main_vision()
 
             if list_bboxes is not None:
-                obj_center, obj_bbox = ct.update(boxes)
-            
+                obj_center, obj_bbox = ct.update(list_bboxes)
+            print('[main] id obj', id(obj_bbox))
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
                 print('     ========update thermal=========')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox)
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox.copy())
                 image = self.overlayImage(image, imageThermal)
             else:
                 image = self.overlayImage(image, imageThermal)
@@ -175,9 +175,6 @@ class MainWindow(QMainWindow):
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
-                    if len(myPeople) == 0:
-                        myPeople[objectID] = ['no name', 'err', (0,0)]
-                    
                     id_name = int(np.array(single_bbox).sum())
                     if id_name in list(dict_name.keys()):
                         print('yuhu')
@@ -186,6 +183,9 @@ class MainWindow(QMainWindow):
                         print(dict_suhu, dict_name)    
                         self.insert_list(single_name)
 
+                    if len(myPeople) == 0:
+                        myPeople[objectID] = ['no name', 'err', (0,0)]
+                    
                     if len(dict_suhu) !=0 :
                         if objectID not in list(myPeople.keys()):
                             myPeople[objectID] = ['...', 'err', (0,0)]
