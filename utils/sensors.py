@@ -226,18 +226,40 @@ class CamTherm(AMG8833):
         data_img = np.flip(data_img, 1)
         return data_img, bicubicData
 
-    def scalling(self, orginImage, bbox, targetSize):
+    def scalling(self, orginImage, bboxScalling, targetSize):
         
         targetSize = targetSize.imag
         originalSize = orginImage.shape
         scaleX = targetSize/originalSize[0]
         scaleY = targetSize/originalSize[1]
 
-        bbox[0] = int(bbox[0]*scaleX)
-        bbox[1] = int(bbox[1]*scaleY)
-        bbox[2] = int(bbox[2]*scaleX)
-        bbox[3] = int(bbox[3]*scaleY)
-        return bbox
+        invertedScaleX = targetSize/originalSize[0]
+        invertedScaleY = targetSize/originalSize[1]
+
+        bboxScalling[0] = int(bboxScalling[0] * scaleX)
+        bboxScalling[1] = int(bboxScalling[1] * scaleY)
+        bboxScalling[2] = int(bboxScalling[2] * scaleX)
+        bboxScalling[3] = int(bboxScalling[3] * scaleY)
+
+        return bboxScalling, (invertedScaleX, invertedScaleY)
+
+    def inverted_scalling(self, image, bboxScalling, invScaleX, invScaleY, titikX, titikY):
+        # value_when_true if condition else value_when_false
+        bboxScalling[0] = [int(bboxScalling[0] * invScaleX) if int(bboxScalling[0] * invScaleX)%2 == 0 else int(bboxScalling[0] * invScaleX)+1][0]
+        bboxScalling[1] = [int(bboxScalling[1] * invScaleY) if int(bboxScalling[1] * invScaleY)%2 == 0 else int(bboxScalling[1] * invScaleY)+1][0]
+        bboxScalling[2] = [int(bboxScalling[2] * invScaleX) if int(bboxScalling[2] * invScaleX)%2 == 0 else int(bboxScalling[2] * invScaleX)+1][0]
+        bboxScalling[3] = [int(bboxScalling[3] * invScaleY) if int(bboxScalling[3] * invScaleY)%2 == 0 else int(bboxScalling[3] * invScaleY)+1][0]
+        titikX = [int(titikX * scaleX) if int(titikX * scaleX)%2 == 0 else int(titikX * scaleX)+1][0]
+        titikX = [int(titikY * scaleY) if int(titikY * scaleY)%2 == 0 else int(titikY * scaleY)+1][0]
+        
+        titikX += bboxScalling[0]
+        titikY += image.shape[0] - (titikY+bboxScalling[1])
+        # centerX+bbox[0],image.shape[1]-(centerY+bbox[1])
+        coordinate = [titikX, titikY]
+
+        return bboxScalling, coordinate 
+
+
 
     def cropImageData(self, imageData, xy, x2y2):
         """
@@ -275,11 +297,13 @@ class CamTherm(AMG8833):
         for bbox, id in zip(bboxes, ids):
             # id_sum = int(np.array(bbox).sum())
             print('bbox sblm scalling', bbox)
-            bbox = self.scalling(image, bbox, self._ukuran)
+            bbox, (invScalX,invScalY) = self.scalling(image, bbox, self._ukuran)
             print('bbox setelah scalling', bbox)
             singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
             maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
-            dictSuhu[id] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
+            bbox, coordinate = self.inverted_scalling(image, bbox, invScalX, invScalY, titik_x, titik_y)
+            dictSuhu[id] = {'coordinate': coordinate, 'max' : maxSuhu,}
+            
 
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
         return imageThermal, dataThermal, dictSuhu

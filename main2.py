@@ -148,9 +148,11 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
-
             list_bboxes, dict_name = rpi.main_vision()
 
+            if list_bboxes is not None:
+                obj_center, obj_bbox = ct.update(boxes)
+            
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
                 print('     ========update thermal=========')
@@ -162,7 +164,7 @@ class MainWindow(QMainWindow):
 
             self.count_FPS+=1
 
-            print('\n>>>>>>>>\n [main2.py onRpi]',
+            print('\n>>>>>>>> before\n [main2.py onRpi]',
                     '\n*dict_name:' , dict_name, 
                     '\n*obj_bbox: ' , obj_bbox, 
                     '\n*dict_suhu: ', dict_suhu,
@@ -190,10 +192,17 @@ class MainWindow(QMainWindow):
                         if objectID not in list(dict_suhu.keys()):
                             myPeople[objectID] = ['...', 'err', (0,0)]
                         else:
-                            coordinate = dict_suhu[id_name]['coordinate']
-                            suhu_max= dict_suhu[id_name]['max']
+                            coordinate = dict_suhu[objectID]['coordinate']
+                            suhu_max= dict_suhu[objectID]['max']
                             myPeople[objectID][1] = suhu_max 
                             myPeople[objectID][2] = coordinate
+
+            print('\n<<<<<<<< after\n [main2.py onRpi]',
+                    '\n*dict_name:' , dict_name, 
+                    '\n*obj_bbox: ' , obj_bbox, 
+                    '\n*dict_suhu: ', dict_suhu,
+                    '\nmyPeople'    , myPeople,
+                    '\n>>>>>>>>')
 
 
         else:
