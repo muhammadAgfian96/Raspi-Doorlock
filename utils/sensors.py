@@ -233,8 +233,8 @@ class CamTherm(AMG8833):
         scaleX = targetSize/originalSize[0]
         scaleY = targetSize/originalSize[1]
 
-        invertedScaleX = targetSize/originalSize[0]
-        invertedScaleY = targetSize/originalSize[1]
+        invertedScaleX = originalSize[0]/targetSize
+        invertedScaleY = originalSize[1]/targetSize
 
         bboxScalling[0] = int(bboxScalling[0] * scaleX)
         bboxScalling[1] = int(bboxScalling[1] * scaleY)

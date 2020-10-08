@@ -152,11 +152,13 @@ class MainWindow(QMainWindow):
 
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes)
+
             print('[main] id obj', id(obj_bbox))
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
+                my_obj = obj_bbox.copy()
                 print('     ========update thermal=========')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox.copy())
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
             else:
                 image = self.overlayImage(image, imageThermal)
@@ -166,7 +168,7 @@ class MainWindow(QMainWindow):
 
             print('\n>>>>>>>> before\n [main2.py onRpi]',
                     '\n*dict_name:' , dict_name, 
-                    '\n*obj_bbox: ' , obj_bbox, 
+                    '\n*obj_bbox: ' , id(obj_bbox), obj_bbox, 
                     '\n*dict_suhu: ', dict_suhu,
                     '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
@@ -176,6 +178,9 @@ class MainWindow(QMainWindow):
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
                     id_name = int(np.array(single_bbox).sum())
+                    if len(myPeople) == 0:
+                        myPeople[objectID] = ['no name', 'err', (0,0)]
+
                     if id_name in list(dict_name.keys()):
                         print('yuhu')
                         single_name = dict_name[id_name]
@@ -183,8 +188,6 @@ class MainWindow(QMainWindow):
                         print(dict_suhu, dict_name)    
                         self.insert_list(single_name)
 
-                    if len(myPeople) == 0:
-                        myPeople[objectID] = ['no name', 'err', (0,0)]
                     
                     if len(dict_suhu) !=0 :
                         if objectID not in list(myPeople.keys()):
@@ -199,7 +202,7 @@ class MainWindow(QMainWindow):
 
             print('\n<<<<<<<< after\n [main2.py onRpi]',
                     '\n*dict_name:' , dict_name, 
-                    '\n*obj_bbox: ' , obj_bbox, 
+                    '\n*obj_bbox: ' , id(obj_bbox), obj_bbox, 
                     '\n*dict_suhu: ', dict_suhu,
                     '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
