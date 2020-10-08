@@ -210,8 +210,8 @@ class CamTherm(AMG8833):
 
         bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_x), method='cubic')    
         
-        
-        pixelsThermal = [self._map(p, MINTEMP, MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixelsThermal]
+
+        pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixelsThermal]
         bicubicImage = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
@@ -229,9 +229,9 @@ class CamTherm(AMG8833):
     def scalling(self, orginImage, bbox, targetSize):
         
         targetSize = targetSize.imag
-        originalSize = image.shape
-        scaleX = targetSize[0]/originalSize[0]
-        scaleY = targetSize[1]/originalSize[1]
+        originalSize = orginImage.shape
+        scaleX = targetSize/originalSize[0]
+        scaleY = targetSize/originalSize[1]
 
         bbox[0] = int(bbox[0]*scaleX)
         bbox[1] = int(bbox[1]*scaleY)
@@ -267,8 +267,8 @@ class CamTherm(AMG8833):
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
 
-        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=120j)
-
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
+        print('HERE', bboxes)
         if bboxes is not None:
             for bbox in bboxes:
                 id_sum = int(np.array(bbox).sum())
@@ -279,5 +279,5 @@ class CamTherm(AMG8833):
                 maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
                 dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
 
-        print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
+        print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
         return imageThermal, dataThermal, dictSuhu

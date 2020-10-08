@@ -170,10 +170,15 @@ class MainWindow(QMainWindow):
         # ------- Function for Doorlock --------
         if on_RPi:
             list_bboxes, dict_name = rpi.main_vision()
-
+            if list_bboxes is None:
+                bboxes_new = boxes
+            else:
+                obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
+                bboxes_new = list_bboxes
+            print(bboxes_new)
             if self.count_FPS % 7 == 0:
                 print('update thermal')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, list_bboxes)
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox.values())
                 image = self.overlayImage(image, imageThermal)
                 
             else:
@@ -181,9 +186,11 @@ class MainWindow(QMainWindow):
 
 
             self.count_FPS+=1
-            # print('\n>>>>>>>>\n main2.py dict_name:', dict_name, obj_bbox, '\n>>>>>>>>')
+            print('\n>>>>>>>>\n main2.py\n*dict_name:', dict_name, 
+                    '\n*obj_bbox: ' , obj_bbox, 
+                    '\n*dict_suhu: ', dict_suhu,'\n>>>>>>>>')
             if list_bboxes is not None:
-                obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
+                #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
                     id_name = int(np.array(single_bbox).sum())
