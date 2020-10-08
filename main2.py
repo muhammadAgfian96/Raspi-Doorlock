@@ -50,6 +50,7 @@ myPeople = OrderedDict()
 
 obj_center = {}
 obj_bbox = {}
+dict_suhu = {}
 
 
 class MainWindow(QMainWindow):
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow):
         
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
+        global dict_suhu
 
         # read image in BGR format
         image = self.cap.read()
@@ -162,10 +164,9 @@ class MainWindow(QMainWindow):
             flags=cv2.CASCADE_SCALE_IMAGE)
 
         boxes = [[x, y, x + w, y + h] for (x, y, w, h) in rects]
-
         h_img, w_img, ch = image.shape
-
         obj_center, obj_bbox = ct.update(boxes)
+
         # ------- Function for Doorlock --------
         if on_RPi:
             list_bboxes, dict_name = rpi.main_vision()
@@ -188,7 +189,10 @@ class MainWindow(QMainWindow):
                     id_name = int(np.array(single_bbox).sum())
                     if id_name in list(dict_name.keys()):
                         single_name = dict_name[id_name]
-                        myPeople[objectID] = [single_name, suhu]
+                        coordinate = dict_suhu[id_name]['coordinate']
+                        suhu_max= dict_suhu[id_name]['max']
+                        print(dict_suhu, dict_name)
+                        myPeople[objectID] = [single_name, suhu_max, coordinate]
                         self.insert_list(single_name)
 
         else:

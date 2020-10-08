@@ -155,13 +155,13 @@ class CamTherm(AMG8833):
         self._MINTEMP = minTemp
 
         #high range of the sensor (this will be red on the screen)
-        self._MAXTEMP = 31
+        self._MAXTEMP = maxTemp
 
         #how many color values we can have
         self._COLORDEPTH = 1024
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
-        self._blue = Color("indigo")
-        self._colors = list(self._blue.range_to(Color("red"), self._COLORDEPTH))
+        self._start_color = Color("indigo")
+        self._colors = list(self._start_color.range_to(Color("red"), self._COLORDEPTH))
         self._colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in self._colors]
 
 
@@ -196,7 +196,7 @@ class CamTherm(AMG8833):
         
         return pixels_2d, list(pixels_1d[0]), rata2
 
-    def _thermalToImageAndData(self, pixelsThermal, ukuranGrid=240j, MINTEMP = 25, MAXTEMP = 35):
+    def _thermalToImageAndData(self, pixelsThermal):
         """
         This is for for resize the data
         
@@ -206,44 +206,38 @@ class CamTherm(AMG8833):
         return:
             @ bicubic = array hasil perbesaran data
         """
-        
-        def constrain(val, min_val, max_val):
-            return min(max_val, max(min_val, val))
 
-        def map(x, in_min, in_max, out_min, out_max):
-            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-        COLORDEPTH = 130
-        start_color = Color("indigo")
-        
-        sisi = int(ukuranGrid.imag)
-        height = sisi
-        width = sisi
-        
-        displayPixelWidth = width / 30
-        displayPixelHeight = height / 30
-        
-        points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
-        grid_x, grid_y = np.mgrid[0:7:ukuranGrid, 0:7:ukuranGrid]
-        colors = list(start_color.range_to(Color("red"), COLORDEPTH))
-        colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in colors]
-        bicubicData = griddata(points, pixelsThermal, (grid_x, grid_y), method='cubic')    
+        bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_x), method='cubic')    
         
         
-        pixelsThermal = [map(p, MINTEMP, MAXTEMP, 0, COLORDEPTH - 1) for p in pixelsThermal]
-        bicubicImage = griddata(points, pixelsThermal, (grid_x, grid_y), method='cubic')
+        pixelsThermal = [self._map(p, MINTEMP, MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixelsThermal]
+        bicubicImage = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
-        print("bicubic shape",bicubicImage.shape)
+        print("bicubic shape", bicubicImage.shape)
 
         for ix, row in enumerate(bicubicImage):
             for jx, pixelsThermal in enumerate(row):
-                r,g,b = colors[constrain(int(pixelsThermal), 0, COLORDEPTH- 1)]
+                r,g,b = self._colors[self._constrain(int(pixelsThermal), 0, self._COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
 
         data_img = np.rot90(data_img, k=1)
         data_img = np.flip(data_img, 1)
         return data_img, bicubicData
+
+    def scalling(self, orginImage, bbox, targetSize):
+        
+        targetSize = targetSize.imag
+        originalSize = image.shape
+        scaleX = targetSize[0]/originalSize[0]
+        scaleY = targetSize[1]/originalSize[1]
+
+        bbox[0] = int(bbox[0]*scaleX)
+        bbox[1] = int(bbox[1]*scaleY)
+        bbox[2] = int(bbox[2]*scaleX)
+        bbox[3] = int(bbox[3]*scaleY)
+        return bbox
 
     def cropImageData(self, imageData, xy, x2y2):
         """
@@ -273,13 +267,17 @@ class CamTherm(AMG8833):
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
 
-        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=100j)
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin,ukuranGrid=120j)
 
         if bboxes is not None:
             for bbox in bboxes:
                 id_sum = int(np.array(bbox).sum())
+                print('bbox sblm scalling', bbox)
+                bbox = self.scalling(image, bbox, self._ukuran)
+                print('bbox setelah scalling', bbox)
                 singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
                 maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
                 dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
-            print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
+
+        print('\n====>>', imageThermal.shape, dataThermal.shape, dictSuhu)
         return imageThermal, dataThermal, dictSuhu

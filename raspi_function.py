@@ -135,26 +135,11 @@ def rcvMsgJSON():
     """
 
     data = socket.recv_multipart(flags=zmq.NOBLOCK)
-    #print(data)
-    #data = json.loads(msg)
     data = json.loads(data[1])
     data = edict(data)
     print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
     return data.names, data.bboxes
     
-def getThermalArray():
-    arrayTherm = thermalCam.getThermal()
-    # -------- overlay thermal ----------
-    y_offset=image.shape[0]-arrayTherm.shape[0]
-    x_offset=0
-    # print(image.shape, )
-
-    alpha = 0.5
-    output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-    cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-    image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-
-    return arrayTherm
 
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
