@@ -151,30 +151,22 @@ class MainWindow(QMainWindow):
 
             list_bboxes, dict_name = rpi.main_vision()
 
-            if list_bboxes is None:
-                # jika tidak ada kiriman data
-                bboxes_new = list(obj_bbox.values())
-            else:
-                # jika ada kiriman data
-                obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                bboxes_new = list(obj_bbox.values())
-
-            print(bboxes_new)
-
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
-                print('update thermal')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox, dict_name)
+                print('     ========update thermal=========')
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox)
                 image = self.overlayImage(image, imageThermal)
             else:
                 image = self.overlayImage(image, imageThermal)
 
 
             self.count_FPS+=1
-            print('\n>>>>>>>>\n main2.py\n*dict_name:', dict_name, 
+
+            print('\n>>>>>>>>\n [main2.py onRpi]',
+                    '\n*dict_name:' , dict_name, 
                     '\n*obj_bbox: ' , obj_bbox, 
                     '\n*dict_suhu: ', dict_suhu,
-                    '\nmyPeople', myPeople,
+                    '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
 
             if list_bboxes is not None:
@@ -195,10 +187,13 @@ class MainWindow(QMainWindow):
                     if len(dict_suhu) !=0 :
                         if objectID not in list(myPeople.keys()):
                             myPeople[objectID] = ['...', 'err', (0,0)]
-                        coordinate = dict_suhu[id_name]['coordinate']
-                        suhu_max= dict_suhu[id_name]['max']
-                        myPeople[objectID][1] = suhu_max 
-                        myPeople[objectID][2] = coordinate
+                        if objectID not in list(dict_suhu.keys()):
+                            myPeople[objectID] = ['...', 'err', (0,0)]
+                        else:
+                            coordinate = dict_suhu[id_name]['coordinate']
+                            suhu_max= dict_suhu[id_name]['max']
+                            myPeople[objectID][1] = suhu_max 
+                            myPeople[objectID][2] = coordinate
 
 
         else:

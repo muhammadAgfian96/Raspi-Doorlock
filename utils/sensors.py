@@ -253,7 +253,7 @@ class CamTherm(AMG8833):
         return maxValue, (x,y)
 
 
-    def getThermal(self, image, obj_bboxes, dictName):
+    def getThermal(self, image, obj_bboxes):
         """
         return:
             - data_image    : numpy array 2d data image
@@ -264,15 +264,15 @@ class CamTherm(AMG8833):
         dictSuhu = {}
         bboxes = list(obj_bboxes.values())
         ids = list(obj_bboxes.keys())
-        names = list(dictName.values())
-        sum_ids = list(dictName.keys())
+        # names = list(dictName.values())
+        # sum_ids = list(dictName.keys())
         pixels_origin = self._cam.read_temp()
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
 
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
         print('HERE', bboxes, ids)
-        for bbox, id in zip(bboxes, ids, sum_ids, ):
+        for bbox, id in zip(bboxes, ids):
             # id_sum = int(np.array(bbox).sum())
             print('bbox sblm scalling', bbox)
             bbox = self.scalling(image, bbox, self._ukuran)
