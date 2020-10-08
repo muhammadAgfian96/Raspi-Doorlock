@@ -249,8 +249,8 @@ class CamTherm(AMG8833):
         bboxScalling[1] = [int(bboxScalling[1] * invScaleY) if int(bboxScalling[1] * invScaleY)%2 == 0 else int(bboxScalling[1] * invScaleY)+1][0]
         bboxScalling[2] = [int(bboxScalling[2] * invScaleX) if int(bboxScalling[2] * invScaleX)%2 == 0 else int(bboxScalling[2] * invScaleX)+1][0]
         bboxScalling[3] = [int(bboxScalling[3] * invScaleY) if int(bboxScalling[3] * invScaleY)%2 == 0 else int(bboxScalling[3] * invScaleY)+1][0]
-        titikX = [int(titikX * scaleX) if int(titikX * scaleX)%2 == 0 else int(titikX * scaleX)+1][0]
-        titikX = [int(titikY * scaleY) if int(titikY * scaleY)%2 == 0 else int(titikY * scaleY)+1][0]
+        titikX = [int(titikX * invScaleX) if int(titikX * invScaleX)%2 == 0 else int(titikX * invScaleX)+1][0]
+        titikX = [int(titikY * invScaleY) if int(titikY * invScaleY)%2 == 0 else int(titikY * invScaleY)+1][0]
         
         titikX += bboxScalling[0]
         titikY += image.shape[0] - (titikY+bboxScalling[1])
