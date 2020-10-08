@@ -253,7 +253,7 @@ class CamTherm(AMG8833):
         return maxValue, (x,y)
 
 
-    def getThermal(self, image, bboxes):
+    def getThermal(self, image, obj_bboxes):
         """
         return:
             - data_image    : numpy array 2d data image
@@ -262,22 +262,22 @@ class CamTherm(AMG8833):
                               > values  --> maximum value
         """
         dictSuhu = {}
-
+        bboxes = list(obj_bboxes.values())
+        ids = list(obj_bboxes.keys())
         pixels_origin = self._cam.read_temp()
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
 
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
-        print('HERE', bboxes)
-        if bboxes is not None:
-            for bbox in bboxes:
-                id_sum = int(np.array(bbox).sum())
-                print('bbox sblm scalling', bbox)
-                bbox = self.scalling(image, bbox, self._ukuran)
-                print('bbox setelah scalling', bbox)
-                singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
-                maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
-                dictSuhu[id_sum] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
+        print('HERE', bboxes, ids)
+        for bbox, id in zip(bboxes, ids):
+            # id_sum = int(np.array(bbox).sum())
+            print('bbox sblm scalling', bbox)
+            bbox = self.scalling(image, bbox, self._ukuran)
+            print('bbox setelah scalling', bbox)
+            singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
+            dictSuhu[id] = {'coordinate': (titik_x, titik_y), 'max' : maxSuhu,}
 
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
         return imageThermal, dataThermal, dictSuhu
