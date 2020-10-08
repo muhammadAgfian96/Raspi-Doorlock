@@ -170,6 +170,7 @@ class MainWindow(QMainWindow):
         # ------- Function for Doorlock --------
         if on_RPi:
             list_bboxes, dict_name = rpi.main_vision()
+            dict_suhu = {}
             if list_bboxes is None:
                 bboxes_new = boxes
             else:
@@ -195,11 +196,17 @@ class MainWindow(QMainWindow):
                 for (objectID, single_bbox) in obj_bbox.items():
                     id_name = int(np.array(single_bbox).sum())
                     if id_name in list(dict_name.keys()):
+                        if len(dict_suhu) !=0 :
+                            coordinate = dict_suhu[id_name]['coordinate']
+                            suhu_max= dict_suhu[id_name]['max']
+                        else:
+                            suhu_max = 'ERR'
+                            coordinate = (0,0)
+                        
                         single_name = dict_name[id_name]
-                        coordinate = dict_suhu[id_name]['coordinate']
-                        suhu_max= dict_suhu[id_name]['max']
-                        print(dict_suhu, dict_name)
                         myPeople[objectID] = [single_name, suhu_max, coordinate]
+                        print(dict_suhu, dict_name)
+                        
                         self.insert_list(single_name)
 
         else:
