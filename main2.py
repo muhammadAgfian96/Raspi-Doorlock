@@ -115,27 +115,6 @@ class MainWindow(QMainWindow):
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
 
-    def visionThermal(self,image):
-        arrayTherm = rpi.thermalCam.getThermal()
-        # -------- overlay thermal ----------
-        y_offset=image.shape[0]-arrayTherm.shape[0]
-        x_offset=0
-
-        alpha = 0.5
-        output = image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] 
-        cv2.addWeighted(arrayTherm, alpha, output, 1 - alpha, 0, output)
-        image[y_offset:y_offset+arrayTherm.shape[0], x_offset:x_offset+arrayTherm.shape[1]] = output
-        return image
-
-    def overlayImageSize(self, mainImage, transparentImage, alpha=0.5):
-        # -------- overlay thermal ----------
-        y_offset=mainImage.shape[0]-transparentImage.shape[0]
-        x_offset=0
-        output = mainImage[y_offset:y_offset+mainImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] 
-        output=cv2.addWeighted(transparentImage, alpha, output, 1 - alpha, 0, output, dtype = cv2.CV_32F)
-        mainImage[y_offset:y_offset+transparentImage.shape[0], x_offset:x_offset+transparentImage.shape[1]] = output
-        return mainImage
-
 
     def overlayImage(self, basicImage, transparantImage, alpha=0.3):
         y_offset=basicImage.shape[0]-transparantImage.shape[0]
@@ -169,19 +148,24 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
+
             list_bboxes, dict_name = rpi.main_vision()
+
             if list_bboxes is None:
-                bboxes_new = boxes
+                # jika tidak ada kiriman data
+                bboxes_new = list(obj_bbox.values())
             else:
+                # jika ada kiriman data
                 obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                bboxes_new = list_bboxes
+                bboxes_new = list(obj_bbox.values())
+
             print(bboxes_new)
+
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
                 print('update thermal')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox)
+                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, obj_bbox, dict_name)
                 image = self.overlayImage(image, imageThermal)
-                
             else:
                 image = self.overlayImage(image, imageThermal)
 
@@ -189,23 +173,32 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
             print('\n>>>>>>>>\n main2.py\n*dict_name:', dict_name, 
                     '\n*obj_bbox: ' , obj_bbox, 
-                    '\n*dict_suhu: ', dict_suhu,'\n>>>>>>>>')
+                    '\n*dict_suhu: ', dict_suhu,
+                    '\nmyPeople', myPeople,
+                    '\n>>>>>>>>')
+
             if list_bboxes is not None:
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
+                    if len(myPeople) == 0:
+                        myPeople[objectID] = ['no name', 'err', (0,0)]
+                    
                     id_name = int(np.array(single_bbox).sum())
                     if id_name in list(dict_name.keys()):
+                        print('yuhu')
                         single_name = dict_name[id_name]
                         myPeople[objectID] = [single_name, 'ERR', (0,0)]
                         print(dict_suhu, dict_name)    
                         self.insert_list(single_name)
 
                     if len(dict_suhu) !=0 :
+                        if objectID not in list(myPeople.keys()):
+                            myPeople[objectID] = ['...', 'err', (0,0)]
                         coordinate = dict_suhu[id_name]['coordinate']
                         suhu_max= dict_suhu[id_name]['max']
                         myPeople[objectID][1] = suhu_max 
-                        myPeople[objectID][2] = coordinate 
+                        myPeople[objectID][2] = coordinate
 
 
         else:
