@@ -9,7 +9,7 @@ import math
 from colour import Color
 from numpy import unravel_index
 import cv2
-
+import copy
 
 
 class PushButton():
@@ -146,7 +146,7 @@ class Card(MFRC522):
             return None
 
 class CamTherm(AMG8833):
-    def __init__(self, alamat, ukuran_pix=120j, minTemp=30, maxTemp=38):
+    def __init__(self, alamat, ukuran_pix=120j, minTemp=25, maxTemp=35):
         self._cam = AMG8833(addr=alamat)
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
         self._ukuran = ukuran_pix
@@ -198,13 +198,14 @@ class CamTherm(AMG8833):
 
     def _thermalToImageAndData(self, pixelsThermal):
         """
-        This is for for resize the data
+        This is for for resize the data thermal
         
         Arguments:
-            @ pixels_list (list) : list data from amgg8833 len data is 64,
-            @ besar (bilangan kompleks) : menentukan ukuran
-        return:
-            @ bicubic = array hasil perbesaran data
+            - pixelsThermal (list) : list data from amgg8833 len data is 64,
+
+        Return:
+            - image_thermal = image thermal in 0 - 255
+            - data_thermal  = data thermal in celcius
         """
 
 
@@ -223,46 +224,63 @@ class CamTherm(AMG8833):
                 data_img[jx,ix] = [r,g,b]
 
         data_img = np.rot90(data_img, k=1)
-        data_img = np.flip(data_img, 1)
+        image_thermal = np.flip(data_img, 1)
         
-        bicubicData = np.flip(bicubicData, axis=0)
-        bicubicData = np.flip(bicubicData, axis=1)
+        bicubicData  = np.flip(bicubicData, axis=0)
+        data_thermal = np.flip(bicubicData, axis=1)
 
-        return data_img, bicubicData
+        return image_thermal, data_thermal
 
-    def _scalling(self, orginImage, bboxScalling, targetSize):
-        
+    def _scalling(self, orginImage, originBBOX, targetSize):
+        """
+        Arguments:
+            - originImage   : (np.array 3d) image from webcam
+            - originBBOX    : (list)        original bbox from face detection
+            - targetSize    : (complex)     self._ukuran on grid data
+
+        Return:
+            - bboxScalled   : (list) bbox yang telah di scalling
+            - originBBOX    : (list) original bbox
+        """
         targetSize = targetSize.imag
         originalSize = orginImage.shape
         scaleX = targetSize/originalSize[0]
         scaleY = targetSize/originalSize[1]
 
-        invertedScaleX = originalSize[0]/targetSize
-        invertedScaleY = originalSize[1]/targetSize
+        bboxScalled = copy.deepcopy(originBBOX)
 
-        bboxScalling[0] = int(bboxScalling[0] * scaleX)
-        bboxScalling[1] = int(bboxScalling[1] * scaleY)
-        bboxScalling[2] = int(bboxScalling[2] * scaleX)
-        bboxScalling[3] = int(bboxScalling[3] * scaleY)
+        bboxScalled[0] = int(bboxScalled[0] * scaleX)
+        bboxScalled[1] = int(bboxScalled[1] * scaleY)
+        bboxScalled[2] = int(bboxScalled[2] * scaleX)
+        bboxScalled[3] = int(bboxScalled[3] * scaleY)
 
-        return bboxScalling, (invertedScaleX, invertedScaleY)
+        return bboxScalled, originBBOX
 
-    def _inverted_scalling(self, image, bboxScalling, invScaleX, invScaleY, titikX, titikY):
-        # value_when_true if condition else value_when_false
-        bboxScalling[0] = [int(bboxScalling[0] * invScaleX) if int(bboxScalling[0] * invScaleX)%2 == 0 else int(bboxScalling[0] * invScaleX)+1][0]
-        bboxScalling[1] = [int(bboxScalling[1] * invScaleY) if int(bboxScalling[1] * invScaleY)%2 == 0 else int(bboxScalling[1] * invScaleY)+1][0]
-        bboxScalling[2] = [int(bboxScalling[2] * invScaleX) if int(bboxScalling[2] * invScaleX)%2 == 0 else int(bboxScalling[2] * invScaleX)+1][0]
-        bboxScalling[3] = [int(bboxScalling[3] * invScaleY) if int(bboxScalling[3] * invScaleY)%2 == 0 else int(bboxScalling[3] * invScaleY)+1][0]
-        titikX = [int(titikX * invScaleX) if int(titikX * invScaleX)%2 == 0 else int(titikX * invScaleX)+1][0]
-        titikX = [int(titikY * invScaleY) if int(titikY * invScaleY)%2 == 0 else int(titikY * invScaleY)+1][0]
+    def _inverted_scalling(self, target, origin, titikX, titikY, bbox):
+        """
+        Arguments:
+            - target        : (np.array)        original image from webcam
+            - origin        : (bil. kompleks)   ukuran_grid camera thermal 
+            - bbox          : (list)            bbox yang telah di scalling 
+            - titiX, titikY : (scalar)          yang telah di scalling, dan titik yang berada pada ROI bbox, bkan keselurahan imageThermal
+
+        Return:
+            - newTitik_X : (Scalar) koordinat yang telah disamakan untuk ukuran image webcam
+            - newTitik_Y : (Scalar) koordinat yang telah disamakan untuk ukuran image webcam
+        """
+        scaleX = target.shape[1]/origin.imag
+        scaleY = target.shape[0]/origin.imag
         
-        titikX += bboxScalling[0]
-        titikY += bboxScalling[1]
-        # centerX+bbox[0],image.shape[1]-(centerY+bbox[1])
-        coordinate = (titikX, titikY)
+        newTitik_X = copy.deepcopy(titikX)
+        newTitik_Y = copy.deepcopy(titikY)
 
-        return bboxScalling, coordinate 
+        newTitik_X += bbox[0]
+        newTitik_Y += bbox[1]
+        
+        newTitik_X = int((newTitik_X+0.5) * scaleX)
+        newTitik_Y = int((newTitik_Y+0.5) * scaleY)
 
+        return newTitik_X, newTitik_Y 
 
 
     def _cropImageData(self, imageData, xy, x2y2):
@@ -274,59 +292,91 @@ class CamTherm(AMG8833):
         return imageData[xy[1]:x2y2[1], xy[0]:x2y2[0]]
 
     def _getMaxCoordinate(self, cropThermal):
+        """
+        Arguments:
+            - cropThermal : (np.array - celcius) one crop bbox Data-Thermal in 2d array
+        """
         maxValue = np.max(cropThermal)
-        (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
-        return maxValue, (x,y)
+        (x,y) = unravel_index(cropThermal.argmax(), cropThermal.shape)
+        return maxValue, (cropThermal.shape[1]-x, y)
 
 
     def getThermal(self, image, object_bboxes):
         """
-        return:
+        Arguments:
+            - image         : (openCV image)
+            - object_bboxes : (list 2d) bboxes of face
+        Return:
             - data_image    : numpy array 2d data image
             - bicubicData   : numpy array 2D data thermal
             - dictSuhu      : > key     --> sum of bbox
                               > values  --> maximum value
         """
-
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
         dictSuhu = {}
         print('[getThermal] id obej',id(object_bboxes))
         bboxes = list(object_bboxes.values())
         ids = list(object_bboxes.keys())
+
         pixels_origin = self._cam.read_temp()
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
-
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
         print('HERE', bboxes, ids)
+
         for bbox, idx in zip(bboxes, ids):
             print('bbox sblm scalling', bbox)
-            # scalling
-            bbox, (invScalX,invScalY) = self._scalling(image, bbox, self._ukuran)
-            print('bbox setelah scalling', bbox)
+            # Scalling the origin bbox so we can go with crop thermalImage
+            bboxScalled, bbox = self._scalling(image, bbox, self._ukuran)
+            print('bbox setelah scalling', bboxScalled)
             
-            # Crop DataThermal
-            singleCropDataThermal = self._cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            # Crop Data-Thermal (isi: celcius)
+            singleCropDataThermal = self._cropImageData(imageData = dataThermal, 
+                                                        xy   = (bboxScalled[0],bboxScalled[1]), 
+                                                        x2y2 = (bboxScalled[2],bboxScalled[3]),
+                                                        )
             
-            # Crop ImageThermal
-            singleCropImageThermal = self._cropImageData(imageThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            # Crop Image-Thermal (isi: 0-255, 3 dimensi)
+            singleCropImageThermal = self._cropImageData(imageData = imageThermal, 
+                                                         xy   =  (bboxScalled[0],bboxScalled[1]), 
+                                                         x2y2 =  (bboxScalled[2],bboxScalled[3]),
+                                                         )
             
             # get maxSuhu and coordinate
-            maxSuhu, (titik_x, titik_y) = self._getMaxCoordinate(singleCropDataThermal)
-            bbox, coordinate = self._inverted_scalling(image, bbox, invScalX, invScalY, titik_x, titik_y)
+            maxSuhu, (coor_x, coor_y) = self._getMaxCoordinate(singleCropDataThermal)
+            new_coor_x, new_coor_y = self._inverted_scalling(target = image, 
+                                                             origin = self._ukuran, 
+                                                             titikX = coor_x, 
+                                                             titikY = coor_y, 
+                                                             bbox = bboxScalled,
+                                                             )
+
+            # insert to data
+            dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 'max' : maxSuhu,}
             
-            # masukkan
-            dictSuhu[idx] = {'coordinate': coordinate, 'max' : maxSuhu,}
             
-            # gambar titiknya
-            image = cv2.circle(image, coordinate, 3, (255,0,0), -1)
+            # ------------------------------- Keperluan Debugging Aja! ------------------------------
+            # gambar titiknya suhu tertinggi pada mukanya!
+            image = cv2.circle(img = image, 
+                               center = dictSuhu[idx]['coordinate'], 
+                               radius = 3, 
+                               color= (255,0,0), 
+                               thickness = -1,
+                               )
             
             # Crop a Face
-            singleCropFace = self._cropImageData(image, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
-            singleCropFace = cv2.cvtColor(singleCropFace, cv2.COLOR_BGR2RGB)
+            singleCropFace = self._cropImageData(imageData = image, 
+                                                 xy =   (bbox[0],bbox[1]), 
+                                                 x2y2=  (bbox[2],bbox[3]),
+                                                 )
 
+            singleCropFace = cv2.cvtColor(src = singleCropFace, code = cv2.COLOR_BGR2RGB)
+
+            
             cv2.imshow('a FACE', singleCropFace)
             cv2.imshow('a Thermal', singleCropImageThermal)
-        
+            # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
 
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)

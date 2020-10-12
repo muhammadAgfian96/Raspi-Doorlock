@@ -117,12 +117,45 @@ class MainWindow(QMainWindow):
 
 
     def overlayImage(self, basicImage, transparantImage, alpha=0.3):
+        # x1 = x_offset
+        # x2 = x_offset+transparantImage.shape[1]
+        # y1 = y_offset
+        # y2 = basicImage.shape[0]
+
+
         y_offset=basicImage.shape[0]-transparantImage.shape[0]
+        y_offset_2 = basicImage.shape[0]
+        
         x_offset=0
-        output = basicImage[y_offset:basicImage.shape[0], x_offset:x_offset+transparantImage.shape[1]] 
-        output = cv2.addWeighted(transparantImage, alpha, output, 1 - alpha, 0, output, dtype = cv2.CV_32F)
-        basicImage[y_offset:basicImage.shape[0], x_offset:x_offset+transparantImage.shape[1]] = output
-        #print("overlay",transparantImage.shape, basicImage.shape)
+        x_offset_2 = x_offset+transparantImage.shape[1]
+        offset = 20
+        
+        output = basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] 
+        
+        output = cv2.addWeighted(src1 = transparantImage, 
+                                 alpha = alpha, 
+                                 src2 = output, 
+                                 beta = 1 - alpha, 
+                                 gamma = 0, 
+                                 dst = output, 
+                                 dtype = cv2.CV_32F,
+                                 )
+        
+        basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] = output
+
+        basicImage = cv2.rectangle(img = basicImage, 
+                                   pt1 = (x_offset+offset, y_offset-offset),
+                                   pt2 = (x_offset_2+offset, y_offset_2-offset), 
+                                   color = (255,255,255),
+                                   thickness=2,
+                                   )
+
+        basicImage = cv2.rectangle(img= basicImage, 
+                                   pt1= (x_offset, y_offset), 
+                                   pt2= (x_offset_2, y_offset_2), 
+                                   color = (255,255,255), 
+                                   thickness=2,
+                                   )
         return basicImage
         
     def stream_camera_on(self):
@@ -130,6 +163,8 @@ class MainWindow(QMainWindow):
         global dict_suhu, obj_bbox, obj_center
 
         # read image in BGR format
+        first_tick = time.time()
+
         image = self.cap.read()
         start_time = time.time()
         image = cv2.resize(image, (400,400))
@@ -144,6 +179,7 @@ class MainWindow(QMainWindow):
 
         boxes = [[x, y, x + w, y + h] for (x, y, w, h) in rects]
         h_img, w_img, ch = image.shape
+        
         obj_center, obj_bbox = ct.update(boxes)
 
         # ------- Function for Doorlock --------
@@ -239,7 +275,7 @@ class MainWindow(QMainWindow):
         cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
         if self.count_FPS == 70:
             self.count_FPS = 0
-            # tanda commit terbaru
+            # tanda commit terbaru 1
         
 
         # get image infos

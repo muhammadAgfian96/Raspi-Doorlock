@@ -161,7 +161,7 @@ def main_vision():
             elif regonized_name.lower() != "unknown":
                 print(f"Silahkan Masuk {regonized_name}!")
                 open_status_face = True
-                dict_name[id_name] = regonized_name 
+                dict_name[id_name] = regonized_name
 
     except zmq.Again as e:  
         # print("-- no received")
