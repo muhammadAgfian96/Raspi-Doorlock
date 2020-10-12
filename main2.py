@@ -152,11 +152,13 @@ class MainWindow(QMainWindow):
 
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes)
+
             print('[main] id obj', id(obj_bbox))
-            if self.count_FPS % 7 == 0:
+
+            if self.isThereNewObject(myPeople, obj_bbox):
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
-                print('     ========update thermal=========')
+                print('\n     ========UPDATE THERMAL=========\n')
                 imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
             else:
@@ -254,6 +256,13 @@ class MainWindow(QMainWindow):
             myObj[i] = ['ga kenal', 'ERR']
 
         return futureObject, myObj
+
+    def isThereNewObject(self, myObj, trackingObj):
+        futureObject = set(trackingObj.keys()).difference(myObj.keys())
+        if len(futureObject) > 0:
+            return True
+        else:
+            return False
 
     def deleteExpireObject(self, myObj, trackingObj):
         diff = set(myObj.keys()).difference(trackingObj.keys())

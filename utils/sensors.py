@@ -257,7 +257,7 @@ class CamTherm(AMG8833):
         titikX = [int(titikY * invScaleY) if int(titikY * invScaleY)%2 == 0 else int(titikY * invScaleY)+1][0]
         
         titikX += bboxScalling[0]
-        titikY = image.shape[0] - (titikY+bboxScalling[1])
+        titikY += bboxScalling[1]
         # centerX+bbox[0],image.shape[1]-(centerY+bbox[1])
         coordinate = (titikX, titikY)
 
@@ -320,9 +320,9 @@ class CamTherm(AMG8833):
             # gambar titiknya
             image = cv2.circle(image, coordinate, 3, (255,0,0), -1)
             
-            # Crop Face
+            # Crop a Face
             singleCropFace = self._cropImageData(image, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
-
+            singleCropFace = cv2.cvtColor(singleCropFace, cv2.COLOR_BGR2RGB)
 
             cv2.imshow('a FACE', singleCropFace)
             cv2.imshow('a Thermal', singleCropImageThermal)
