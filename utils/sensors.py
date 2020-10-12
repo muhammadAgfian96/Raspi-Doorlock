@@ -360,22 +360,30 @@ class CamTherm(AMG8833):
             # gambar titiknya suhu tertinggi pada mukanya!
             image = cv2.circle(img = image, 
                                center = dictSuhu[idx]['coordinate'], 
-                               radius = 3, 
-                               color= (255,0,0), 
+                               radius = 4, 
+                               color= (0,0,255), 
+                               thickness = -1,
+                               )
+
+            imageThermal = cv2.circle(img = imageThermal, 
+                               center = (coor_x+bboxScalled[0], coor_y+bboxScalled[1]), 
+                               radius = 4, 
+                               color= (255,255,255), 
                                thickness = -1,
                                )
             
             # Crop a Face
             singleCropFace = self._cropImageData(imageData = image, 
-                                                 xy =   (bbox[0],bbox[1]), 
-                                                 x2y2=  (bbox[2],bbox[3]),
+                                                 xy   =  (bbox[0],bbox[1]), 
+                                                 x2y2 =  (bbox[2],bbox[3]),
                                                  )
 
             singleCropFace = cv2.cvtColor(src = singleCropFace, code = cv2.COLOR_BGR2RGB)
 
             
-            cv2.imshow('a FACE', singleCropFace)
-            cv2.imshow('a Thermal', singleCropImageThermal)
+            cv2.imshow('a FACE_', image)
+            cv2.imshow('a Thermal_', imageThermal)
+
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
 

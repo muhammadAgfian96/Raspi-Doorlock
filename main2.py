@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
         
         x_offset=0
         x_offset_2 = x_offset+transparantImage.shape[1]
-        offset = 20
+        offset = 10
         
         output = basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] 
         
@@ -150,12 +150,6 @@ class MainWindow(QMainWindow):
                                    thickness=2,
                                    )
 
-        basicImage = cv2.rectangle(img= basicImage, 
-                                   pt1= (x_offset, y_offset), 
-                                   pt2= (x_offset_2, y_offset_2), 
-                                   color = (255,255,255), 
-                                   thickness=2,
-                                   )
         return basicImage
         
     def stream_camera_on(self):
@@ -191,7 +185,7 @@ class MainWindow(QMainWindow):
 
             print('[main] id obj', id(obj_bbox))
 
-            if self.isThereNewObject(myPeople, obj_bbox):
+            if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox):
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
                 print('\n     ========UPDATE THERMAL=========\n')
