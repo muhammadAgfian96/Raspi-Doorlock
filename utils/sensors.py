@@ -223,6 +223,7 @@ class CamTherm(AMG8833):
                 r,g,b = self._colors[self._constrain(int(pixelsThermal), 0, self._COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
 
+        # menyamakan posisi index dengan opencv
         data_img = np.rot90(data_img, k=1)
         image_thermal = np.flip(data_img, 1)
         
@@ -297,8 +298,8 @@ class CamTherm(AMG8833):
             - cropThermal : (np.array - celcius) one crop bbox Data-Thermal in 2d array
         """
         maxValue = np.max(cropThermal)
-        (x,y) = unravel_index(cropThermal.argmax(), cropThermal.shape)
-        return maxValue, (cropThermal.shape[1]-x, y)
+        (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
+        return maxValue, (x, y)
 
 
     def getThermal(self, image, object_bboxes):
@@ -324,6 +325,8 @@ class CamTherm(AMG8833):
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
         print('HERE', bboxes, ids)
+
+        imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
         for bbox, idx in zip(bboxes, ids):
             print('bbox sblm scalling', bbox)
@@ -364,10 +367,10 @@ class CamTherm(AMG8833):
                                color= (0,0,255), 
                                thickness = -1,
                                )
-
-            imageThermal = cv2.circle(img = imageThermal, 
+            
+            imageThermal = cv2.circle(img = np.array(imageThermal), 
                                center = (coor_x+bboxScalled[0], coor_y+bboxScalled[1]), 
-                               radius = 4, 
+                               radius = 2, 
                                color= (255,255,255), 
                                thickness = -1,
                                )

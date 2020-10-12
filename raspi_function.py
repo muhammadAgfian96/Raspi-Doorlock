@@ -44,8 +44,7 @@ s_jarak  = sensors.Jarak(p_trig_jarak, p_echo_jarak)
 relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
 my_card = sensors.Card()
-#thermalCam = sensors.CamTherm(alamat=0x68)
-thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=80j, minTemp=24, maxTemp=34)
+thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=150j, minTemp=24, maxTemp=34)
 
 #------- GET FROM SERVER
 addr_server = "tcp://11.11.11.11:5556"
@@ -99,6 +98,7 @@ def scalling(image, bbox):
     bbox[1] = int(bbox[1]*scaleY)
     bbox[2] = int(bbox[2]*scaleX)
     bbox[3] = int(bbox[3]*scaleY)
+
     return bbox
 
 # old function -not used
@@ -138,6 +138,8 @@ def rcvMsgJSON():
     data = json.loads(data[1])
     data = edict(data)
     print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
+    for one_bbox in data.bboxes:
+        one_bbox = scalling()
     return data.names, data.bboxes
     
 

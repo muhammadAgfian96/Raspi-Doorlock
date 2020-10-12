@@ -39,7 +39,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
          'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
          'Nov', 'Dec']
 
-imageThermal = np.zeros((400,400,3))
+imageThermal = np.zeros((400,300,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=16)
 getData = False
@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
 
         image = self.cap.read()
         start_time = time.time()
-        image = cv2.resize(image, (400,400))
+        image = cv2.resize(image, (400,300))
         # image = imutils.resize(image, width=400) # for face
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
