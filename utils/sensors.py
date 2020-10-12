@@ -8,7 +8,7 @@ from scipy.interpolate import griddata
 import math
 from colour import Color
 from numpy import unravel_index
-
+import cv2
 
 
 
@@ -224,9 +224,13 @@ class CamTherm(AMG8833):
 
         data_img = np.rot90(data_img, k=1)
         data_img = np.flip(data_img, 1)
+        
+        bicubicData = np.flip(bicubicData, axis=0)
+        bicubicData = np.flip(bicubicData, axis=1)
+
         return data_img, bicubicData
 
-    def scalling(self, orginImage, bboxScalling, targetSize):
+    def _scalling(self, orginImage, bboxScalling, targetSize):
         
         targetSize = targetSize.imag
         originalSize = orginImage.shape
@@ -243,7 +247,7 @@ class CamTherm(AMG8833):
 
         return bboxScalling, (invertedScaleX, invertedScaleY)
 
-    def inverted_scalling(self, image, bboxScalling, invScaleX, invScaleY, titikX, titikY):
+    def _inverted_scalling(self, image, bboxScalling, invScaleX, invScaleY, titikX, titikY):
         # value_when_true if condition else value_when_false
         bboxScalling[0] = [int(bboxScalling[0] * invScaleX) if int(bboxScalling[0] * invScaleX)%2 == 0 else int(bboxScalling[0] * invScaleX)+1][0]
         bboxScalling[1] = [int(bboxScalling[1] * invScaleY) if int(bboxScalling[1] * invScaleY)%2 == 0 else int(bboxScalling[1] * invScaleY)+1][0]
@@ -253,15 +257,15 @@ class CamTherm(AMG8833):
         titikX = [int(titikY * invScaleY) if int(titikY * invScaleY)%2 == 0 else int(titikY * invScaleY)+1][0]
         
         titikX += bboxScalling[0]
-        titikY += image.shape[0] - (titikY+bboxScalling[1])
+        titikY = image.shape[0] - (titikY+bboxScalling[1])
         # centerX+bbox[0],image.shape[1]-(centerY+bbox[1])
-        coordinate = [titikX, titikY]
+        coordinate = (titikX, titikY)
 
         return bboxScalling, coordinate 
 
 
 
-    def cropImageData(self, imageData, xy, x2y2):
+    def _cropImageData(self, imageData, xy, x2y2):
         """
         Arguments:
             xy = [x1, y1]
@@ -269,7 +273,7 @@ class CamTherm(AMG8833):
         """
         return imageData[xy[1]:x2y2[1], xy[0]:x2y2[0]]
 
-    def getMaxCoordinate(self, cropThermal):
+    def _getMaxCoordinate(self, cropThermal):
         maxValue = np.max(cropThermal)
         (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
         return maxValue, (x,y)
@@ -283,12 +287,11 @@ class CamTherm(AMG8833):
             - dictSuhu      : > key     --> sum of bbox
                               > values  --> maximum value
         """
+
         dictSuhu = {}
         print('[getThermal] id obej',id(object_bboxes))
-        bboxes = list(object_bboxes.values()).copy()
-        ids = list(object_bboxes.keys()).copy()
-        # names = list(dictName.values())
-        # sum_ids = list(dictName.keys())
+        bboxes = list(object_bboxes.values())
+        ids = list(object_bboxes.keys())
         pixels_origin = self._cam.read_temp()
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
@@ -296,14 +299,34 @@ class CamTherm(AMG8833):
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
         print('HERE', bboxes, ids)
         for bbox, idx in zip(bboxes, ids):
-            # id_sum = int(np.array(bbox).sum())
             print('bbox sblm scalling', bbox)
-            bbox, (invScalX,invScalY) = self.scalling(image, bbox, self._ukuran)
+            # scalling
+            bbox, (invScalX,invScalY) = self._scalling(image, bbox, self._ukuran)
             print('bbox setelah scalling', bbox)
-            singleCropImageData = self.cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
-            maxSuhu, (titik_x, titik_y) = self.getMaxCoordinate(singleCropImageData)
-            bbox, coordinate = self.inverted_scalling(image, bbox, invScalX, invScalY, titik_x, titik_y)
+            
+            # Crop DataThermal
+            singleCropDataThermal = self._cropImageData(dataThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            
+            # Crop ImageThermal
+            singleCropImageThermal = self._cropImageData(imageThermal, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+            
+            # get maxSuhu and coordinate
+            maxSuhu, (titik_x, titik_y) = self._getMaxCoordinate(singleCropDataThermal)
+            bbox, coordinate = self._inverted_scalling(image, bbox, invScalX, invScalY, titik_x, titik_y)
+            
+            # masukkan
             dictSuhu[idx] = {'coordinate': coordinate, 'max' : maxSuhu,}
+            
+            # gambar titiknya
+            image = cv2.circle(image, coordinate, 3, (255,0,0), -1)
+            
+            # Crop Face
+            singleCropFace = self._cropImageData(image, (bbox[0],bbox[1]), (bbox[2],bbox[3]))
+
+
+            cv2.imshow('a FACE', singleCropFace)
+            cv2.imshow('a Thermal', singleCropImageThermal)
+        
             
 
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)

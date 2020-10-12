@@ -32,7 +32,7 @@ from collections import OrderedDict
 
 import time
 import datetime
-
+import copy
 
 # global variabel
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
@@ -152,11 +152,10 @@ class MainWindow(QMainWindow):
 
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes)
-
             print('[main] id obj', id(obj_bbox))
             if self.count_FPS % 7 == 0:
                 dict_suhu = {}
-                my_obj = obj_bbox.copy()
+                my_obj = copy.deepcopy(obj_bbox)
                 print('     ========update thermal=========')
                 imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
@@ -167,8 +166,8 @@ class MainWindow(QMainWindow):
             self.count_FPS+=1
 
             print('\n>>>>>>>> before\n [main2.py onRpi]',
-                    '\n*dict_name:' , dict_name, 
-                    '\n*obj_bbox: ' , id(obj_bbox), obj_bbox, 
+                    '\n*dict_name: ', dict_name, 
+                    '\n*obj_bbox : ', id(obj_bbox), obj_bbox, 
                     '\n*dict_suhu: ', dict_suhu,
                     '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
@@ -193,7 +192,7 @@ class MainWindow(QMainWindow):
                         if objectID not in list(myPeople.keys()):
                             myPeople[objectID] = ['...', 'err', (0,0)]
                         if objectID not in list(dict_suhu.keys()):
-                            myPeople[objectID] = ['...', 'err', (0,0)]
+                            myPeople[objectID] = ['._.', 'err', (0,0)]
                         else:
                             coordinate = dict_suhu[objectID]['coordinate']
                             suhu_max= dict_suhu[objectID]['max']
