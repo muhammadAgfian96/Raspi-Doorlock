@@ -138,8 +138,6 @@ def rcvMsgJSON():
     data = json.loads(data[1])
     data = edict(data)
     print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
-    for one_bbox in data.bboxes:
-        one_bbox = scalling()
     return data.names, data.bboxes
     
 

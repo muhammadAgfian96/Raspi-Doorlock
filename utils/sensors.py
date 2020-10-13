@@ -245,15 +245,15 @@ class CamTherm(AMG8833):
         """
         targetSize = targetSize.imag
         originalSize = orginImage.shape
-        scaleX = targetSize/originalSize[0]
-        scaleY = targetSize/originalSize[1]
+        scaleX = targetSize / originalSize[1]
+        scaleY = targetSize / originalSize[0]
 
         bboxScalled = copy.deepcopy(originBBOX)
 
-        bboxScalled[0] = int(bboxScalled[0] * scaleX)
-        bboxScalled[1] = int(bboxScalled[1] * scaleY)
-        bboxScalled[2] = int(bboxScalled[2] * scaleX)
-        bboxScalled[3] = int(bboxScalled[3] * scaleY)
+        bboxScalled[0] = int(np.round(bboxScalled[0]) * scaleX)
+        bboxScalled[1] = int(np.round(bboxScalled[1]) * scaleY)
+        bboxScalled[2] = int(np.round(bboxScalled[2]) * scaleX)
+        bboxScalled[3] = int(np.round(bboxScalled[3]) * scaleY)
 
         return bboxScalled, originBBOX
 
@@ -356,7 +356,8 @@ class CamTherm(AMG8833):
                                                              )
 
             # insert to data
-            dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 'max' : maxSuhu,}
+            dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
+                             'max' : maxSuhu,}
             
             
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
@@ -370,10 +371,11 @@ class CamTherm(AMG8833):
             
             imageThermal = cv2.circle(img = np.array(imageThermal), 
                                center = (coor_x+bboxScalled[0], coor_y+bboxScalled[1]), 
-                               radius = 2, 
+                               radius = 3, 
                                color= (255,255,255), 
                                thickness = -1,
                                )
+            imageThermal = cv2.rectangle(imageThermal, (bboxScalled[0],bboxScalled[1]), (bboxScalled[2],bboxScalled[3]), (255,255,255), 2 )
             
             # Crop a Face
             singleCropFace = self._cropImageData(imageData = image, 
