@@ -208,6 +208,7 @@ class MainWindow(QMainWindow):
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
+                    
                     id_name = int(np.array(single_bbox).sum())
                     if len(myPeople) == 0:
                         myPeople[objectID] = ['no name', 'err', (0,0)]

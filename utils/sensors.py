@@ -148,9 +148,11 @@ class Card(MFRC522):
 class CamTherm(AMG8833):
     def __init__(self, alamat, ukuran_pix=120j, minTemp=25, maxTemp=35):
         self._cam = AMG8833(addr=alamat)
+
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
         self._ukuran = ukuran_pix
         self._grid_x, self._grid_y = np.mgrid[0:7:self._ukuran, 0:7:self._ukuran]
+
         #low range of the sensor (this will be blue on the screen)
         self._MINTEMP = minTemp
 
@@ -207,9 +209,7 @@ class CamTherm(AMG8833):
             - image_thermal = image thermal in 0 - 255
             - data_thermal  = data thermal in celcius
         """
-
-
-        bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_x), method='cubic')    
+        bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')    
         
 
         pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixelsThermal]
@@ -217,7 +217,8 @@ class CamTherm(AMG8833):
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
         print("bicubic shape", bicubicImage.shape)
-
+        
+        # mapping celcius into colors
         for ix, row in enumerate(bicubicImage):
             for jx, pixelsThermal in enumerate(row):
                 r,g,b = self._colors[self._constrain(int(pixelsThermal), 0, self._COLORDEPTH- 1)]
@@ -225,12 +226,15 @@ class CamTherm(AMG8833):
 
         # menyamakan posisi index dengan opencv
         data_img = np.rot90(data_img, k=1)
-        image_thermal = np.flip(data_img, 1)
+        image_thermal = np.flip(m=data_img, axis=1)
         
-        bicubicData  = np.flip(bicubicData, axis=0)
-        data_thermal = np.flip(bicubicData, axis=1)
+        bicubicData  = np.flip(m=bicubicData, axis=0)
+        data_thermal = np.flip(m=bicubicData, axis=1)
 
         return image_thermal, data_thermal
+
+
+
 
     def _scalling(self, orginImage, originBBOX, targetSize):
         """
@@ -269,6 +273,7 @@ class CamTherm(AMG8833):
             - newTitik_X : (Scalar) koordinat yang telah disamakan untuk ukuran image webcam
             - newTitik_Y : (Scalar) koordinat yang telah disamakan untuk ukuran image webcam
         """
+
         scaleX = target.shape[1]/origin.imag
         scaleY = target.shape[0]/origin.imag
         
@@ -302,6 +307,7 @@ class CamTherm(AMG8833):
         return maxValue, (x, y)
 
 
+
     def getThermal(self, image, object_bboxes):
         """
         Arguments:
@@ -324,7 +330,7 @@ class CamTherm(AMG8833):
 
         pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
-        print('HERE', bboxes, ids)
+        print('HERE', bboxes, ids, )
 
         imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
@@ -378,7 +384,7 @@ class CamTherm(AMG8833):
             imageThermal = cv2.rectangle(imageThermal, (bboxScalled[0],bboxScalled[1]), (bboxScalled[2],bboxScalled[3]), (255,255,255), 2 )
             
             # Crop a Face
-            singleCropFace = self._cropImageData(imageData = image, 
+            singleCropFace = self._cropImageData(imageData = image,
                                                  xy   =  (bbox[0],bbox[1]), 
                                                  x2y2 =  (bbox[2],bbox[3]),
                                                  )
