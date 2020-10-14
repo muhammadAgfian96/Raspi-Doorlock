@@ -73,51 +73,23 @@ open_status_RFID = False
 
 count_close = 0
 counting_RFID = 0
+signal_open = 0
 
-old_time = time.time()
+newPeople = []
+dict_name = {}
+
 first_time = True
 first_time_jarak = True
+
+old_time = time.time()
 start_time = time.time()
-signal_open = 0
 door_time = time.time()
 state_time_btn = time.time()
 state_time_sJarak = time.time()
-dict_name = {}
 
 def display(pesan):
     pass
 
-def scalling(image, bbox):
-    
-    targetSize = image.shape
-    originalSize = (400,300)
-    scaleX = targetSize[0]/originalSize[0]
-    scaleY = targetSize[1]/originalSize[1]
-
-    bbox[0] = int(bbox[0]*scaleX)
-    bbox[1] = int(bbox[1]*scaleY)
-    bbox[2] = int(bbox[2]*scaleX)
-    bbox[3] = int(bbox[3]*scaleY)
-
-    return bbox
-
-# old function -not used
-def rcvMsg():
-    message = socket.recv_string(flags=zmq.NOBLOCK, encoding='utf-8')
-    now = datetime.now()
-    print(message)
-    now = now.strftime("%d/%m/%Y-%H:%M:%S")
-    name = message.split(" ")[1]
-    try:
-        list_bbox = message.split(" ")[2].split(",")
-        print(list_bbox)
-        bbox = [int(nilai) if nilai!='-1' else 0 for nilai in list_bbox if (nilai !='')]
-        bbox = scalling(bbox)
-    except:
-        bbox= None
-    print(bbox)
-    print("-- Received %s %s" % (message,now))
-    return name, bbox
 
 def rcvMsgJSON():
     """
@@ -144,14 +116,21 @@ def rcvMsgJSON():
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak
-    global old_time, first_time, start_time
+    global old_time, first_time, start_time, newPeople
+
     list_bboxes = []
+    statusNewPeople = False
+
     try:
         dict_name = {}
         list_pred_name, list_bboxes  = rcvMsgJSON()
-        
+
         for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
             id_name = int(np.array(single_bbox).sum())
+            
+            if regonized_name not in newPeople:
+                statusNewPeople = True
+
             if regonized_name.lower() == "unknown":
                 #socket.send(b"High")
                 print("Unknown, Not Open")
@@ -159,9 +138,9 @@ def main_vision():
                 display("Silakan Hubungi Petugas")
 
             elif regonized_name.lower() != "unknown":
-                print(f"Silahkan Masuk {regonized_name}!")
                 open_status_face = True
                 dict_name[id_name] = regonized_name
+                newPeople.append(regonized_name)
 
     except zmq.Again as e:  
         # print("-- no received")
@@ -170,9 +149,9 @@ def main_vision():
     main_output()
     print('\n>>>>>>>>\n raspi_function.py dict_name:', dict_name, '\n>>>>>>>>')
     if len(list_bboxes) == 0:
-        return None, None
+        return None, None, statusNewPeople
     else:
-        return list_bboxes, dict_name
+        return list_bboxes, dict_name, statusNewPeople
         
 
 def main_input():

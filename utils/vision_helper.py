@@ -8,8 +8,8 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 		bbox = x, y, x+w, y+h --> (atas, bawah)
 	"""
 
-	if type(suhu) ==type(' tipe string'):
-		color_bbox = (0,0,255)
+	if type(suhu) == type('tipe string'):
+		color_bbox = (0,0,255) # blue
 		color_text = (0,0,0)
 	else:
 		suhu += 5.5

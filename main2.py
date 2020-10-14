@@ -16,7 +16,7 @@ from ui_functions import *
 try:
     import RPi.GPIO as gpio
     on_RPi = True
-    import raspi_function as rpi
+    from raspi_function import main_input, main_output, main_vision, thermalCam
     print("work on raspberry pi")
 except (ImportError, RuntimeError):
     on_RPi = False
@@ -26,7 +26,6 @@ from utils.vision_helper import draw_box_name
 import cv2
 import imutils
 from imutils.video import VideoStream
-from imutils.video import FPS
 from utils.centroidtracker import CentroidTracker
 from collections import OrderedDict
 
@@ -178,18 +177,18 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
-            list_bboxes, dict_name = rpi.main_vision()
+            list_bboxes, dict_name, isNewPeople = main_vision()
 
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes)
 
             print('[main] id obj', id(obj_bbox))
 
-            if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox):
+            if self.count_FPS % 20 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
                 print('\n     ========UPDATE THERMAL=========\n')
-                imageThermal, thermalData, dict_suhu = rpi.thermalCam.getThermal(image, my_obj)
+                imageThermal, thermalData, dict_suhu = thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
             else:
                 image = self.overlayImage(image, imageThermal)
@@ -204,19 +203,19 @@ class MainWindow(QMainWindow):
                     '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
 
-            if list_bboxes is not None:
+            if len(obj_bbox.keys()) > 0:
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
                 # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
-                    
+
                     id_name = int(np.array(single_bbox).sum())
                     if len(myPeople) == 0:
-                        myPeople[objectID] = ['no name', 'err', (0,0)]
+                        myPeople[objectID] = ['no name', 'wait', (0,0)]
 
                     if id_name in list(dict_name.keys()):
                         print('yuhu')
                         single_name = dict_name[id_name]
-                        myPeople[objectID] = [single_name, 'ERR', (0,0)]
+                        myPeople[objectID] = [single_name, 'wait', (0,0)]
                         print(dict_suhu, dict_name)    
                         self.insert_list(single_name)
 
@@ -225,7 +224,7 @@ class MainWindow(QMainWindow):
                         if objectID not in list(myPeople.keys()):
                             myPeople[objectID] = ['...', 'err', (0,0)]
                         if objectID not in list(dict_suhu.keys()):
-                            myPeople[objectID] = ['._.', 'err', (0,0)]
+                            myPeople[objectID] = ['---', 'err', (0,0)]
                         else:
                             coordinate = dict_suhu[objectID]['coordinate']
                             suhu_max= dict_suhu[objectID]['max']
@@ -257,10 +256,16 @@ class MainWindow(QMainWindow):
             print("test", myPeople, objectID)
             if objectID in myPeople.keys():
                 print("in 1 : ada kotak dan nama")
-                draw_box_name(single_bbox, myPeople[objectID][0], image, suhu=myPeople[objectID][1])
+                draw_box_name(bbox = single_bbox, 
+                              name = myPeople[objectID][0], 
+                              frame = image, 
+                              suhu = myPeople[objectID][1])
             elif len(boxes) != 0:
                 print("in 2 : ada kotak, nama tidak ada")
-                draw_box_name(single_bbox, '_', image, suhu=suhu)
+                draw_box_name(bbox = single_bbox, 
+                              name = '_', 
+                              frame = image, 
+                              suhu=suhu)
             else:
                 print("in 3 : ", len(boxes))
                 continue
@@ -280,7 +285,12 @@ class MainWindow(QMainWindow):
         qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
-    
+
+    def processing_sensors(self):
+        if on_RPi:
+            main_input()
+
+
     def getNewObject(self, myObj, trackingObj):
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
         for i in futureObject:
@@ -299,10 +309,6 @@ class MainWindow(QMainWindow):
         diff = set(myObj.keys()).difference(trackingObj.keys())
         for i in diff:
             del myObj[i]
-
-    def processing_sensors(self):
-        if on_RPi:
-            rpi.main_input()
 
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%H:%M"))
