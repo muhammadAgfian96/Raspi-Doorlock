@@ -166,9 +166,12 @@ class MainWindow(QMainWindow):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        rects = self.detector.detectMultiScale(gray, scaleFactor=1.1, 
-            minNeighbors=5, minSize=(30, 30),
-            flags=cv2.CASCADE_SCALE_IMAGE)
+        rects = self.detector.detectMultiScale(image = gray, 
+                                               scaleFactor=1.1, 
+                                               minNeighbors=5, 
+                                               minSize=(60, 60),
+                                               maxSize=(150,150),
+                                               flags=cv2.CASCADE_SCALE_IMAGE)
 
         boxes = [[x, y, x + w, y + h] for (x, y, w, h) in rects]
         h_img, w_img, ch = image.shape
@@ -191,8 +194,13 @@ class MainWindow(QMainWindow):
                 imageThermal, thermalData, dict_suhu = thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
             else:
+
                 image = self.overlayImage(image, imageThermal)
 
+            if dict_suhu is None:
+                dict_suhu = {}
+            if dict_name is None:
+                dict_name = {}
 
             self.count_FPS+=1
 
@@ -216,7 +224,7 @@ class MainWindow(QMainWindow):
                         print('yuhu')
                         single_name = dict_name[id_name]
                         myPeople[objectID] = [single_name, 'wait', (0,0)]
-                        print(dict_suhu, dict_name)    
+                        print(dict_suhu, dict_name)
                         self.insert_list(single_name)
 
                     
@@ -254,12 +262,14 @@ class MainWindow(QMainWindow):
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             print("test", myPeople, objectID)
+
             if objectID in myPeople.keys():
                 print("in 1 : ada kotak dan nama")
                 draw_box_name(bbox = single_bbox, 
                               name = myPeople[objectID][0], 
                               frame = image, 
                               suhu = myPeople[objectID][1])
+
             elif len(boxes) != 0:
                 print("in 2 : ada kotak, nama tidak ada")
                 draw_box_name(bbox = single_bbox, 

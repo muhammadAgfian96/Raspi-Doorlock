@@ -335,6 +335,11 @@ class CamTherm(AMG8833):
         imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
         for bbox, idx in zip(bboxes, ids):
+            bbox[0] = [bbox[0] if bbox[0] >= 0 else 0][0]
+            bbox[1] = [bbox[1] if bbox[1] >= 0 else 0][0]
+            bbox[2] = [bbox[2] if bbox[2] >= 0 else 0][0]
+            bbox[3] = [bbox[3] if bbox[3] >= 0 else 0][0]
+
             print('bbox sblm scalling', bbox)
             # Scalling the origin bbox so we can go with crop thermalImage
             bboxScalled, bbox = self._scalling(image, bbox, self._ukuran)
@@ -381,12 +386,13 @@ class CamTherm(AMG8833):
                                color= (255,255,255), 
                                thickness = -1,
                                )
+                               
             imageThermal = cv2.rectangle(imageThermal, (bboxScalled[0],bboxScalled[1]), (bboxScalled[2],bboxScalled[3]), (255,255,255), 2 )
             
             # Crop a Face
             singleCropFace = self._cropImageData(imageData = image,
-                                                 xy   =  (bbox[0],bbox[1]), 
-                                                 x2y2 =  (bbox[2],bbox[3]),
+                                                 xy   =  (bbox[0], bbox[1]), 
+                                                 x2y2 =  (bbox[2], bbox[3]),
                                                  )
 
             singleCropFace = cv2.cvtColor(src = singleCropFace, code = cv2.COLOR_BGR2RGB)
