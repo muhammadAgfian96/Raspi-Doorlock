@@ -32,3 +32,23 @@ v4l2:///dev/video0 \
 -I dummy
 ```
 test
+
+## Setting Up Camera
+
+to see what you can control on your camera:
+
+```powershell
+v4l2-ctl -list-control
+
+```
+
+```powershell
+v4l2-ctl -d /dev/video0 -c focus_auto=0 
+v4l2-ctl -d /dev/video0 -c brightness=150
+v4l2-ctl -d /dev/video0 -c contrast=0
+v4l2-ctl -d /dev/video0 -c gain=150
+v4l2-ctl -d /dev/video0 -c sharpness=80
+v4l2-ctl -d /dev/video0 -c exposure_auto_priority=0
+v4l2-ctl -d /dev/video0 -c exposure_auto=1
+v4l2-ctl -d /dev/video0 -c exposure_auto_absolute=170
+```

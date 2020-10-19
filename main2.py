@@ -53,6 +53,7 @@ dict_suhu = {}
 
 
 class MainWindow(QMainWindow):
+    pixel_list = None
     def __init__(self):
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
@@ -161,6 +162,7 @@ class MainWindow(QMainWindow):
         image = self.cap.read()
         start_time = time.time()
         image = cv2.resize(image, (400,300))
+
         # image = imutils.resize(image, width=400) # for face
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
@@ -169,7 +171,7 @@ class MainWindow(QMainWindow):
         rects = self.detector.detectMultiScale(image = gray, 
                                                scaleFactor=1.1, 
                                                minNeighbors=5, 
-                                               minSize=(60, 60),
+                                               minSize=(30, 30),
                                                maxSize=(150,150),
                                                flags=cv2.CASCADE_SCALE_IMAGE)
 
@@ -191,10 +193,9 @@ class MainWindow(QMainWindow):
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
                 print('\n     ========UPDATE THERMAL=========\n')
-                imageThermal, thermalData, dict_suhu = thermalCam.getThermal(image, my_obj)
+                imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal)
             else:
-
                 image = self.overlayImage(image, imageThermal)
 
             if dict_suhu is None:
@@ -246,7 +247,6 @@ class MainWindow(QMainWindow):
                     '\nmyPeople'    , myPeople,
                     '\n>>>>>>>>')
 
-
         else:
             pred_name='face'
             suhu = 36.8
@@ -287,6 +287,36 @@ class MainWindow(QMainWindow):
             self.count_FPS = 0
             # tanda commit terbaru 1
         
+        image = cv2.resize(image, (400,300))
+
+        for ix,x in enumerate(range(0, 400, 400//8)):
+            for iy, y in enumerate(range(0, 320, 320//8)):
+                if (x==200 and y==150):
+                    thickness = 2
+                else:
+                    thickness = 1
+                # line horizontal
+                cv2.line(img = image,
+                        # y, x
+                        pt1 = (x, 0), 
+                        pt2 = (x, 300), 
+                        color=(0,255,255),
+                        thickness=thickness)
+                
+                # line vertikal
+                cv2.line(img = image,
+                        pt1 = (0,  y), 
+                        pt2 = (400,y), 
+                        color=(0,255,255),
+                        thickness=thickiness)
+
+                cv2.putText(img = image,
+                            text = str(MainWindow.pixel_list[ix][iy]),
+                            org = (x,y),
+                            fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+                            fontScale = 1, 
+                            color = (0,0,0)
+                            )
 
         # get image infos
         height, width, channel = image.shape

@@ -326,9 +326,9 @@ class CamTherm(AMG8833):
         bboxes = list(object_bboxes.values())
         ids = list(object_bboxes.keys())
 
-        pixels_origin = self._cam.read_temp()
+        pixels_origin_first = self._cam.read_temp()
 
-        pixels_2d, pixels_origin, rata2 = self._regresikan(pixels_origin)
+        pixels_2d, pixels_origin, rata2 = self._regresikan(copy.deepcopy(pixels_origin_first))
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
         print('HERE', bboxes, ids, )
 
@@ -403,6 +403,6 @@ class CamTherm(AMG8833):
 
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
-
+        pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
-        return imageThermal, dataThermal, dictSuhu
+        return imageThermal, dataThermal, dictSuhu, pixels_origin_first
