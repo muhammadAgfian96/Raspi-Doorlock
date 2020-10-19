@@ -282,16 +282,19 @@ class MainWindow(QMainWindow):
 
 
         FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
         if self.count_FPS == 70:
             self.count_FPS = 0
             # tanda commit terbaru 1
         
         image = cv2.resize(image, (400,300))
-
+        mean_pix = np.mean(MainWindow.pixel_list)
+        MainWindow.pixel_list  = np.flip(m=MainWindow.pixel_list, axis=0)
+        MainWindow.pixel_list  = np.flip(m=MainWindow.pixel_list, axis=1)
         for ix,x in enumerate(range(0, 400, 400//8)):
             for iy, y in enumerate(range(0, 320, 320//8)):
-                if (x==200 and y==150):
+                
+                if (ix==4 and y==4):
                     thickness = 2
                 else:
                     thickness = 1
@@ -308,14 +311,18 @@ class MainWindow(QMainWindow):
                         pt1 = (0,  y), 
                         pt2 = (400,y), 
                         color=(0,255,255),
-                        thickness=thickiness)
+                        thickness=thickness)
 
+                if (MainWindow.pixel_list[ix][iy] > mean_pix):
+                    color_text = (255,255,255)
+                else: 
+                    color_text = (0,255,255)
                 cv2.putText(img = image,
                             text = str(MainWindow.pixel_list[ix][iy]),
                             org = (x,y),
                             fontFace = cv2.FONT_HERSHEY_SIMPLEX,
                             fontScale = 1, 
-                            color = (0,0,0)
+                            color = color_text,
                             )
 
         # get image infos
