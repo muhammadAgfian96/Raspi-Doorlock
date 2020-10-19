@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
                                    pt1 = (x_offset+offset, y_offset-offset),
                                    pt2 = (x_offset_2+offset, y_offset_2-offset), 
                                    color = (255,255,255),
-                                   thickness=2,
+                                   thickness=1,
                                    )
 
         return basicImage
@@ -194,9 +194,9 @@ class MainWindow(QMainWindow):
                 my_obj = copy.deepcopy(obj_bbox)
                 print('\n     ========UPDATE THERMAL=========\n')
                 imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
-                image = self.overlayImage(image, imageThermal)
+                image = self.overlayImage(image, imageThermal, alpha=0.7)
             else:
-                image = self.overlayImage(image, imageThermal)
+                image = self.overlayImage(image, imageThermal, alpha=0.7)
 
             if dict_suhu is None:
                 dict_suhu = {}
@@ -282,22 +282,22 @@ class MainWindow(QMainWindow):
 
 
         FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
+        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
         if self.count_FPS == 70:
             self.count_FPS = 0
             # tanda commit terbaru 1
         
         image = cv2.resize(image, (400,300))
         mean_pix = np.mean(MainWindow.pixel_list)
-        MainWindow.pixel_list  = np.flip(m=MainWindow.pixel_list, axis=0)
-        MainWindow.pixel_list  = np.flip(m=MainWindow.pixel_list, axis=1)
+
         for ix,x in enumerate(range(0, 400, 400//8)):
             for iy, y in enumerate(range(0, 320, 320//8)):
                 
-                if (ix==4 and y==4):
+                if (ix == 4 and iy == 4):
                     thickness = 2
                 else:
                     thickness = 1
+                    
                 # line horizontal
                 cv2.line(img = image,
                         # y, x
@@ -313,16 +313,19 @@ class MainWindow(QMainWindow):
                         color=(0,255,255),
                         thickness=thickness)
 
-                if (MainWindow.pixel_list[ix][iy] > mean_pix):
-                    color_text = (255,255,255)
+                if (MainWindow.pixel_list[ix][iy] > mean_pix+1):
+                    thickness_text = 2
                 else: 
-                    color_text = (0,255,255)
+                    thickness_text = 1
+                    
+                color_text = (0,255,255)
                 cv2.putText(img = image,
                             text = str(MainWindow.pixel_list[ix][iy]),
-                            org = (x,y),
+                            org = (x+5,y+25),
                             fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale = 1, 
+                            fontScale = 0.45, 
                             color = color_text,
+                            thickness=thickness_text
                             )
 
         # get image infos

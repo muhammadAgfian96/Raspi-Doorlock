@@ -404,5 +404,9 @@ class CamTherm(AMG8833):
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
         pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
+        
+        #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0)
+        #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
+        
         print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
         return imageThermal, dataThermal, dictSuhu, pixels_origin_first
