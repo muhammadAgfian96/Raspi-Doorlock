@@ -6,6 +6,8 @@ import datetime as dt
 
 # from easydict import EasyDict as edict
 
+
+
 def setup_logger(name:str, log_file:str, level=logging.DEBUG, 
                  folder_name:str='logs', 
                  to_console:bool=False, removePeriodically:bool=False,
@@ -20,7 +22,6 @@ def setup_logger(name:str, log_file:str, level=logging.DEBUG,
 
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
     full_path = folder_name+'/'+log_file
-
     def filer(self):
         now = dt.datetime.now()
         fullTime = ''
@@ -91,15 +92,9 @@ def setup_logger(name:str, log_file:str, level=logging.DEBUG,
 
     return root_logger
 
-
-# How to Use
-# ----------------------------------------------------------------
-"""
-
 test = setup_logger('my_first', 'main.log', folder_name='main_logs',removePeriodically=True,
                     interval=1, backupCount=2, when='m', to_console=True)
+
 while True:
     test.info('hai')
     time.sleep(10)
-
-"""

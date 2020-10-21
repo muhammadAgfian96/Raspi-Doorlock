@@ -1,9 +1,18 @@
-from main2 import *
+print("ui_functions.py")
+
+from main2 import MainWindow
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent, QTimer)
+from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient, QImage)
+from PyQt5.QtWidgets import *
+
 import datetime
 import cv2
 
 GLOBAL_STATE = 0 
 have_pressed = -1
+
 class UIFunctions(MainWindow):
 
     def maximize_restore(self):
@@ -18,6 +27,7 @@ class UIFunctions(MainWindow):
             # self.ui.horizontalLayout_3.setContentMargins(0,0,0,0)
             self.ui.main.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(32, 74, 135, 255), stop:0.597015 rgba(48, 140, 198, 255));\nborder-radius:10px;")
             self.ui.btn_max.setToolTip("Restore")
+
         else:
             GLOBAL_STATE=0
             self.showNormal()
