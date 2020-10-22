@@ -10,6 +10,14 @@ from colour import Color
 from numpy import unravel_index
 import cv2
 import copy
+from config import *
+
+
+
+sensor_log = setup_logger(name = 'sensor', log_file = 'sensor_logs', 
+                        folder_name='sensor_logs', level = logging.DEBUG,
+                        removePeriodically=True, to_console=True,
+                        interval=2, backupCount=5, when='h')
 
 
 class PushButton():
@@ -23,10 +31,10 @@ class PushButton():
         know condition push
         """
         if GPIO.input(self.__pin_tombol):
-            print('button HIGH')
+            sensor_log.info('[button HIGH] Pressed!')
             return True
         else:
-            print('button LOW')
+            # sensor_log.info('[button LOW] Unpressed!')
             return False
         
 class Relay():
@@ -69,7 +77,7 @@ class Jarak():
         GPIO.setup(self.__pTrig, GPIO.OUT)
         GPIO.setup(self.__pEcho, GPIO.IN)
 
-    def detect(self, m=None, b=None, v=True):
+    def detect(self, m=None, b=None, v=True) -> float:
         # set Trigger to HIGH 
         GPIO.output(self.__pTrig, True) 
         # set Trigger after 0.01ms to LOW 
@@ -84,14 +92,14 @@ class Jarak():
         while 0 == GPIO.input(self.__pEcho):
             timeStartJarak = time.time()
             if timeStartJarak - runTimeStart > 0.15:
-                print('[Error Sensors] Timeout 0 Jarak!')
-                return 60
+                sensor_log.warning(f'[Sensor Jarak] Time out! timeStartJarak: {timeStartJarak} seconds')
+                return 60.0
         # save time of arrival 
         while 1 == GPIO.input(self.__pEcho): 
             timeStopJarak = time.time()
             if timeStopJarak - runTimeStart > 0.15:
-                print('[Error Sensors] Timeout 1 Jarak!')
-                return 60
+                sensor_log.warning(f'[Sensor Jarak] Time out! timeStopJarak: {timeStopJarak} seconds')
+                return 60.0
         # time difference between start and arrival 
         TimeElapsed = timeStopJarak - timeStartJarak 
         # multiply with the sonic speed (34300 cm/s) 
@@ -101,7 +109,7 @@ class Jarak():
             # faktor regresi linear
             distance = m*distance+b
         if v:
-            print("[s_jarak] {:.2f} cm".format(distance))
+            sensor_log.info("[Sensor Jarak] {:.2f} cm".format(distance))
         return distance
 
 class Card(MFRC522):
@@ -114,7 +122,8 @@ class Card(MFRC522):
 
         # If a card is found
         if status == self.__MIFAREReader.MI_OK:
-            print("Card detected")
+            # print("Card detected")
+            sensor_log.info("[RFID] Card detected")
         
         # Get the UID of the card
         (status,uid) = self.__MIFAREReader.MFRC522_Anticoll()
@@ -123,8 +132,8 @@ class Card(MFRC522):
         if status == self.__MIFAREReader.MI_OK:
 
             # Print UID
-            print("[RFID] Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
-        
+            # print("[RFID] Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
+            sensor_log.info("[RFID] Card read UID: %s-%s-%s-%s" % (uid[0], uid[1], uid[2], uid[3]))
             # This is the default key for authentication
             #key = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]
             
@@ -177,7 +186,7 @@ class CamTherm(AMG8833):
 
     def _regresikan(self, pixels_list, shape=(8,8)):
         print(type(pixels_list), pixels_list)
-
+        sensor_log.debug(f"[Cam Thermal] \ntype: {type(pixels_list)} \nisi: {pixels_list}")
         rata2 = np.array(list(pixels_list)).mean()
         pixels_2d = np.array(pixels_list).reshape(shape)
         
@@ -192,8 +201,7 @@ class CamTherm(AMG8833):
         
         pixels_2d[logical_greater] = greater
         pixels_2d[logical_minor] = minor
-        # print(rata2)        
-        # print(np.array(list(pixels_list)).reshape(-1,1).shape)
+
         pixels_1d = pixels_2d.reshape((1, max(np.array(list(pixels_list)).reshape(-1,1).shape)))
         
         return pixels_2d, list(pixels_1d[0]), rata2
@@ -216,7 +224,6 @@ class CamTherm(AMG8833):
         bicubicImage = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
-        print("bicubic shape", bicubicImage.shape)
         
         # mapping celcius into colors
         for ix, row in enumerate(bicubicImage):
@@ -308,7 +315,7 @@ class CamTherm(AMG8833):
 
 
 
-    def getThermal(self, image, object_bboxes):
+    def getThermal(self, image, object_bboxes, youDebugging=False):
         """
         Arguments:
             - image         : (openCV image)
@@ -373,33 +380,34 @@ class CamTherm(AMG8833):
             
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             # gambar titiknya suhu tertinggi pada mukanya!
-            image = cv2.circle(img = image, 
-                               center = dictSuhu[idx]['coordinate'], 
-                               radius = 4, 
-                               color= (0,0,255), 
-                               thickness = -1,
-                               )
-            
-            imageThermal = cv2.circle(img = np.array(imageThermal), 
-                               center = (coor_x+bboxScalled[0], coor_y+bboxScalled[1]), 
-                               radius = 3, 
-                               color= (255,255,255), 
-                               thickness = -1,
-                               )
-                               
-            imageThermal = cv2.rectangle(imageThermal, (bboxScalled[0],bboxScalled[1]), (bboxScalled[2],bboxScalled[3]), (255,255,255), 2 )
-            
-            # Crop a Face
-            singleCropFace = self._cropImageData(imageData = image,
-                                                 xy   =  (bbox[0], bbox[1]), 
-                                                 x2y2 =  (bbox[2], bbox[3]),
-                                                 )
+            if youDebugging:
+                image = cv2.circle(img = image, 
+                                center = dictSuhu[idx]['coordinate'], 
+                                radius = 4, 
+                                color= (0,0,255), 
+                                thickness = -1,
+                                )
+                
+                imageThermal = cv2.circle(img = np.array(imageThermal), 
+                                center = (coor_x+bboxScalled[0], coor_y+bboxScalled[1]), 
+                                radius = 3, 
+                                color= (255,255,255), 
+                                thickness = -1,
+                                )
+                                
+                imageThermal = cv2.rectangle(imageThermal, (bboxScalled[0],bboxScalled[1]), (bboxScalled[2],bboxScalled[3]), (255,255,255), 2 )
+                
+                # Crop a Face
+                singleCropFace = self._cropImageData(imageData = image,
+                                                    xy   =  (bbox[0], bbox[1]), 
+                                                    x2y2 =  (bbox[2], bbox[3]),
+                                                    )
 
-            singleCropFace = cv2.cvtColor(src = singleCropFace, code = cv2.COLOR_BGR2RGB)
+                singleCropFace = cv2.cvtColor(src = singleCropFace, code = cv2.COLOR_BGR2RGB)
 
-            
-            cv2.imshow('a FACE_', image)
-            cv2.imshow('a Thermal_', imageThermal)
+                
+                cv2.imshow('a FACE_', image)
+                cv2.imshow('a Thermal_', imageThermal)
 
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
@@ -408,5 +416,6 @@ class CamTherm(AMG8833):
         #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0)
         #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
         
-        print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
+        # print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
+        sensor_log.info(f'[Cam Thermal] dict suhu {imageThermal.shape}, {dataThermal.shape}, {dictSuhu}')
         return imageThermal, dataThermal, dictSuhu, pixels_origin_first

@@ -60,14 +60,14 @@ dict_suhu = {}
 main_log = setup_logger(name = 'main_logs', log_file = 'main_logs', 
                         folder_name='main_logs', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
-                        interval=10, backupCount=5, when='s')
+                        interval=2, backupCount=5, when='h')
 
 log_thermal_formatter = logging.Formatter('%(asctime)s \n%(message)s', "%Y-%m-%d %H:%M:%S")
 
 thermal_log = setup_logger(name = 'thermal', log_file = 'thermal_logs', 
                         folder_name='thermal_logs', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
-                        interval=1, backupCount=10, when='m', 
+                        interval=5, backupCount=10, when='m', 
                         formatter=log_thermal_formatter)
 
 
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
                 obj_center, obj_bbox = ct.update(list_bboxes)
 
 
-            if self.count_FPS % 10 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
+            if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
                 imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
@@ -247,6 +247,8 @@ class MainWindow(QMainWindow):
                         myPeople[objectID] = [single_name, 'wait', (0,0)]
                         # print(dict_suhu, dict_name)
                         self.insert_list(single_name)
+                        main_log.info(f'[People In] {single_name}')
+
 
                     
                     if len(dict_suhu) !=0 :
@@ -259,7 +261,7 @@ class MainWindow(QMainWindow):
                             suhu_max= dict_suhu[objectID]['max']
                             myPeople[objectID][1] = suhu_max 
                             myPeople[objectID][2] = coordinate
-
+                            main_log.info(f'[People In with Therm] {myPeople[objectID]}')
             # print('\n<<<<<<<< after\n [main2.py onRpi]',
             #         '\n*dict_name:' , dict_name, 
             #         '\n*obj_bbox: ' , id(obj_bbox), obj_bbox, 
@@ -310,14 +312,18 @@ class MainWindow(QMainWindow):
             image = cv2.resize(image, (400,300))
             mean_pix = np.mean(MainWindow.pixel_list)
             
-            cal_y_thermal_start = -50
-            cal_y_thermal_end = 50
-            cal_x_thermal_start = 0
-            cal_x_thermal_end = 0
+            cal_y_start = -40
+            cal_y_end = 40
+            cal_x_start = 0
+            cal_x_end = 0
             cal_x_text = 0
             cal_y_text = 0
-            for ix,x in enumerate(range(0, 400, 400//8)):
-                for iy, y in enumerate(range(0, 320, 320//8)):
+
+            start_y, end_y = cal_y_start + 0, cal_y_end + 320
+            start_x, end_x = cal_x_start + 0, cal_x_end + 400
+            
+            for ix,x in enumerate(range(start_x, end_x, end_x//8)):
+                for iy, y in enumerate(range(start_y, end_y, end_y//8)):
                     
                     if (ix == 4 and iy == 4):
                         thickness = 2
@@ -326,16 +332,15 @@ class MainWindow(QMainWindow):
                         
                     # line horizontal
                     cv2.line(img = image,
-                            # y, x
-                            pt1 = (cal_x_thermal_start + x, cal_y_thermal_start+0), 
-                            pt2 = (cal_x_thermal_end + x, cal_y_thermal_end+300), 
+                            pt1 = ( x, start_y), 
+                            pt2 = ( x, end_y  ), 
                             color=(0,255,255),
                             thickness=thickness)
                     
                     # line vertikal
                     cv2.line(img = image,
-                            pt1 = (cal_x_thermal_start + 0,  cal_y_thermal_start+ y), 
-                            pt2 = (cal_x_thermal_end + 400,cal_y_thermal_end  + y), 
+                            pt1 = ( start_x,  + y ), 
+                            pt2 = ( end_x,    + y ), 
                             color=(0,255,255),
                             thickness=thickness)
 
@@ -347,8 +352,7 @@ class MainWindow(QMainWindow):
                     color_text = (0,255,255)
                     cv2.putText(img = image,
                                 text = str(MainWindow.pixel_list[ix][iy]),
-                                org = (cal_x_text + x + 5, 
-                                       cal_y_text + y + 25),
+                                org = (x + 5, y + 25),
                                 fontFace = cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale = 0.45, 
                                 color = color_text,

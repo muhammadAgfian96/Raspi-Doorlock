@@ -4,7 +4,7 @@ from collections import OrderedDict
 import numpy as np
 
 class CentroidTracker():
-	def __init__(self, maxDisappeared=7):
+	def __init__(self, maxDisappeared=7, maxDistance = 70):
 		# initialize the next unique object ID along with two ordered
 		# dictionaries used to keep track of mapping a given object
 		# ID to its centroid and number of consecutive frames it has
@@ -20,6 +20,7 @@ class CentroidTracker():
 		# object is allowed to be marked as "disappeared" until we
 		# need to deregister the object from tracking
 		self.maxDisappeared = maxDisappeared
+		self.maxDistance = maxDistance
 
 	def register(self, centroid, bbox):
 		# when registering an object we use the next available object
@@ -128,19 +129,24 @@ class CentroidTracker():
 				if row in usedRows or col in usedCols:
 					continue
 
+
+				# if the distance between centroids is greater than
+				# the maximum distance, do not associate the two
+				# centroids to the same object
+				if D[row, col] > self.maxDistance:
+					continue
+
 				# otherwise, grab the object ID for the current row,
 				# set its new centroid, and reset the disappeared
 				# counter
 				objectID = objectIDs[row]
 
-				array_origin = np.array([self.objects[objectID]])
-				# array_origin = np.array([array_origin])
-				array_input = np.array([inputCentroids[col]])
-				# print("~!@#$%^&* selisih,",array_origin, array_input,self.objects[objectID])
-				selisih = dist.cdist(array_origin, array_input)
-				# print(">>>>>>>>>>>>>>> selisih,",selisih)
-				if selisih > 50:
-					continue
+				# array_origin = np.array([self.objects[objectID]])
+				# array_input = np.array([inputCentroids[col]])
+				# selisih = dist.cdist(array_origin, array_input)
+				# if selisih > self.maxDistance:
+				# 	continue
+
 				self.objects[objectID] = inputCentroids[col]
 				self.boxesObj[objectID] = bboxTrack[col]
 				# self.name[objectID] = nameTrack[col] 

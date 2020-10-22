@@ -15,6 +15,7 @@ import json
 import time
 from time import sleep     # Import the sleep function from the time module
 import numpy as np
+from config import *
 
 import RPi.GPIO as GPIO
 GPIO.setwarnings(False)    # Ignore warning for now
@@ -87,6 +88,13 @@ door_time = time.time()
 state_time_btn = time.time()
 state_time_sJarak = time.time()
 
+
+raspi_log = setup_logger(name = 'raspi', log_file = 'raspi_logs', 
+                        folder_name='raspi_logs', level = logging.DEBUG,
+                        removePeriodically=True, to_console=True,
+                        interval=2, backupCount=5, when='h')
+
+
 def display(pesan):
     pass
 
@@ -109,7 +117,8 @@ def rcvMsgJSON():
     data = socket.recv_multipart(flags=zmq.NOBLOCK)
     data = json.loads(data[1])
     data = edict(data)
-    print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
+    # print("\n>>>>>>>>>>>>>\nJSON data receive:\n", type(data), data,'\n>>>>>>>>>>>>>\\n')
+    raspi_log.info(f'[rcvMsgJSON] data receive: {type(data)}, {data} \n')
     return data.names, data.bboxes
     
 
@@ -147,7 +156,7 @@ def main_vision():
         list_bboxes = []
     
     main_output()
-    print('\n>>>>>>>>\n raspi_function.py dict_name:', dict_name, '\n>>>>>>>>')
+    raspi_log.debug(f"[main_vision] dict_name: {dict_name}\n")
     if len(list_bboxes) == 0:
         return None, None, statusNewPeople
     else:
@@ -176,14 +185,15 @@ def main_input():
         signal_open = 0
         open_status_sJarak = True
         first_time_jarak = True
-        print("[JARAK] signal open")
+
 
     # ---- RFID
     counting_RFID += 1
     if counting_RFID == 10:
         counting_RFID = 0
         uid = my_card.read_card()
-        print("[RFID CARD]", uid)
+        # print("[RFID CARD]", uid)
+        raspi_log.info(f'[main_input] RFID Card: {uid}')
         if uid == "249108142":
             open_status_RFID = True
 
@@ -196,18 +206,22 @@ def main_output():
     # Jika Pintu Tebuka
     if hasil ==  True:
         if open_status_face:
-            print('[ON] by FACE')
+            # print('[ON] by FACE')
+            raspi_log.info(f'[main_output] Relay ON by FACE')
         if open_status_sJarak:
-            print('[ON] by s JARAK')
+            # print('[ON] by s JARAK')
+            raspi_log.info(f'[main_output] Relay ON by s JARAK')
         if open_status_button:
-            print('[ON] by BUTTON')
+            # print('[ON] by BUTTON')
+            raspi_log.info(f'[main_output] Relay ON by BUTTON')
         if open_status_RFID:
-            print('[ON] by RFID')
+            # print('[ON] by RFID')
+            raspi_log.info(f'[main_output] Relay ON by RFID')
 
         if first_time == True:
             door_time = time.time()
             first_time = False
-            print("get first time")
+            # print("get first time")
             
         else:
             if time.time() - door_time >= 3:
@@ -217,4 +231,5 @@ def main_output():
             else:
                 relay_magnet.off(v=True)
                 
-    print("[Actuators] The Door is Open? ", hasil)
+    # print("[Actuators] The Door is Open? ", hasil)
+    raspi_log.info(f'[main_output] the door is open? {hasil}')
