@@ -5,11 +5,14 @@ from logging.handlers import TimedRotatingFileHandler
 import datetime as dt
 
 # from easydict import EasyDict as edict
+default_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
+
 
 def setup_logger(name:str, log_file:str, level=logging.DEBUG, 
                  folder_name:str='logs', 
                  to_console:bool=False, removePeriodically:bool=False,
-                 backupCount:int=7, when:str = 'D', interval:int = 7):
+                 backupCount:int=7, when:str = 'D', interval:int = 7, 
+                 formatter = default_formatter):
     """
     when:       
         'S': Seconds
@@ -18,7 +21,6 @@ def setup_logger(name:str, log_file:str, level=logging.DEBUG,
         'D':Days
     """
 
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
     full_path = folder_name+'/'+log_file
 
     def filer(self):

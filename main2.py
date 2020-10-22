@@ -62,10 +62,13 @@ main_log = setup_logger(name = 'main_logs', log_file = 'main_logs',
                         removePeriodically=True, to_console=True,
                         interval=10, backupCount=5, when='s')
 
+log_thermal_formatter = logging.Formatter('%(asctime)s \n%(message)s', "%Y-%m-%d %H:%M:%S")
+
 thermal_log = setup_logger(name = 'thermal', log_file = 'thermal_logs', 
                         folder_name='thermal_logs', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
-                        interval=1, backupCount=10, when='m')
+                        interval=1, backupCount=10, when='m', 
+                        formatter=log_thermal_formatter)
 
 
 class MainWindow(QMainWindow):
@@ -205,8 +208,12 @@ class MainWindow(QMainWindow):
                 my_obj = copy.deepcopy(obj_bbox)
                 imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
                 image = self.overlayImage(image, imageThermal, alpha=0.7)
-                current_pixel = pd.DataFrame(data=MainWindow.pixel_list)
-                thermal_log.info(current_pixel)
+                
+                # debugging for calibration
+                pixels_origin_first  = np.flip(m=copy.deepcopy(MainWindow.pixel_list), axis=0)
+                pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
+                current_pixel = pd.DataFrame(data=pixels_origin_first)
+                thermal_log.info(f'''\n{current_pixel}\n''')
 
             else:
                 image = self.overlayImage(image, imageThermal, alpha=0.7)
@@ -302,6 +309,13 @@ class MainWindow(QMainWindow):
         if kalibrasi_mode:
             image = cv2.resize(image, (400,300))
             mean_pix = np.mean(MainWindow.pixel_list)
+            
+            cal_y_thermal_start = -50
+            cal_y_thermal_end = 50
+            cal_x_thermal_start = 0
+            cal_x_thermal_end = 0
+            cal_x_text = 0
+            cal_y_text = 0
             for ix,x in enumerate(range(0, 400, 400//8)):
                 for iy, y in enumerate(range(0, 320, 320//8)):
                     
@@ -313,19 +327,19 @@ class MainWindow(QMainWindow):
                     # line horizontal
                     cv2.line(img = image,
                             # y, x
-                            pt1 = (x, 0), 
-                            pt2 = (x, 300), 
+                            pt1 = (cal_x_thermal_start + x, cal_y_thermal_start+0), 
+                            pt2 = (cal_x_thermal_end + x, cal_y_thermal_end+300), 
                             color=(0,255,255),
                             thickness=thickness)
                     
                     # line vertikal
                     cv2.line(img = image,
-                            pt1 = (0,  y), 
-                            pt2 = (400,y), 
+                            pt1 = (cal_x_thermal_start + 0,  cal_y_thermal_start+ y), 
+                            pt2 = (cal_x_thermal_end + 400,cal_y_thermal_end  + y), 
                             color=(0,255,255),
                             thickness=thickness)
 
-                    if (MainWindow.pixel_list[ix][iy] > mean_pix+1):
+                    if (MainWindow.pixel_list[ix][iy] > mean_pix+0.5):
                         thickness_text = 2
                     else: 
                         thickness_text = 1
@@ -333,7 +347,8 @@ class MainWindow(QMainWindow):
                     color_text = (0,255,255)
                     cv2.putText(img = image,
                                 text = str(MainWindow.pixel_list[ix][iy]),
-                                org = (x+5,y+25),
+                                org = (cal_x_text + x + 5, 
+                                       cal_y_text + y + 25),
                                 fontFace = cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale = 0.45, 
                                 color = color_text,
