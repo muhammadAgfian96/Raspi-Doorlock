@@ -205,7 +205,7 @@ class CamTherm(AMG8833):
 
         # has 2d dimentions
         expanded_arr = griddata(self._points, arr_input[:], (self._grid_x, self._grid_y), method='cubic')    
-        expanded_arr *= (expanded_arr/arr1_mean)
+        expanded_arr *= (expanded_arr/arr_mean)
         expanded_arr_mean = expanded_arr.mean()
         expanded_arr_max = expanded_arr.max()
         expanded_arr_min = expanded_arr.min()
@@ -215,14 +215,14 @@ class CamTherm(AMG8833):
         idx_greater = expanded_arr >= expanded_arr_mean
         idx_minor = expanded_arr < expanded_arr_mean
         
-        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.456925
-        factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.115660
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.682925
+        factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.215660
         
-        new_exp_arr_greater = expanded_arr[logical_greater] * factor_greater
-        new_exp_arr_minor = expanded_arr[logical_minor] * factor_minor
+        new_exp_arr_greater = expanded_arr[idx_greater] * factor_greater
+        new_exp_arr_minor = expanded_arr[idx_minor] * factor_minor
         
-        expanded_arr[logical_greater] = new_exp_arr_greater
-        expanded_arr[logical_minor] = new_exp_arr_minor
+        expanded_arr[idx_greater] = new_exp_arr_greater
+        expanded_arr[idx_minor] = new_exp_arr_minor
 
         return expanded_arr
 
@@ -245,7 +245,7 @@ class CamTherm(AMG8833):
         
 
 
-        new_pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
+        C = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
         bicubicImage = self._regresikan_part_2(new_pixelsThermal, np.mean(new_pixelsThermal))
         # bicubicImage = griddata(self._points, new_pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
@@ -253,8 +253,8 @@ class CamTherm(AMG8833):
         
         # mapping celcius into colors
         for ix, row in enumerate(bicubicImage):
-            for jx, pixelsThermal in enumerate(row):
-                r,g,b = self._colors[self._constrain(int(pixelsThermal), 0, self._COLORDEPTH- 1)]
+            for jx, pixels_Thermal in enumerate(row):
+                r,g,b = self._colors[self._constrain(int(pixels_Thermal), 0, self._COLORDEPTH- 1)]
                 data_img[jx,ix] = [r,g,b]
 
         # menyamakan posisi index dengan opencv
@@ -363,7 +363,7 @@ class CamTherm(AMG8833):
         # pixels_2d, pixels_origin, rata2 = self._regresikan(copy.deepcopy(pixels_origin_first))
         # pixel_origin = self._calibration(pixels_origin_first)
         imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin_first)
-        imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
+        # imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
         for bbox, idx in zip(bboxes, ids):
             bbox[0] = [bbox[0] if bbox[0] >= 0 else 0][0]
