@@ -38,6 +38,7 @@ from collections import OrderedDict
 import time
 import datetime
 import copy
+import mysql.connector
 
 # global variabel
 bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
@@ -107,6 +108,14 @@ class MainWindow(QMainWindow):
 
         self.streamDate.start()
         self.count_FPS = 0
+        self.mysql_config = {
+            'host': '11.11.11.11',
+            'port': 3306,
+            'database': 'raspberry_pi_data',
+            'user': 'root',
+            'password': 'Root@123'
+        }
+
 
         # MOVE WINDOW
         def moveWindow(event):
@@ -165,7 +174,44 @@ class MainWindow(QMainWindow):
                                    )
 
         return basicImage
-        
+
+    def insertDBServer(self, data):
+        """to insert data to MySQL Server
+            - data: 
+                [0] name: string,
+                [1] mask: boolean,
+                [2] suhu: float,
+                [3] door_name: string"""
+        try:
+            connection = mysql.connector.connect(host=self.mysql_config['host'],
+                                                    port=self.mysql_config['port'],
+                                                    database=self.mysql_config['database'],
+                                                    user=self.mysql_config['user'],
+                                                    password=self.mysql_config['password'])
+            cursor = connection.cursor()
+            nama = data[0]
+            mask = False
+            suhu = data[1]
+            door_name = 'Ruang Kerja AITI'
+
+            query_insert_db = f"""INSERT INTO raspi_test(name, mask, suhu, door_name) 
+                                    VALUES ('{name}', {mask}, {suhu}, '{door_name}')"""
+            result  = cursor.execute(query_insert_db)
+            connection.commit()
+            print(f"Success to MySQL: {name}, {mask}, {suhu}, {door_name}")
+            main_log.info(f"Succes Entered Data: {name}, {mask}, {suhu}, {door_name}")
+        except mysql.connector.Error as error :
+            connection.rollback()
+            main_log.error("Failed to MySQL: {}".format(error))
+        except:
+            raise
+        finally:
+            if(connection.is_connected()):
+                cursor.close()
+                connection.close()
+            else:
+                main_log.error("MySQL Cant Connect! Wrong Password/Host/Username/something")
+
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
         global dict_suhu, obj_bbox, obj_center, koko
@@ -210,8 +256,9 @@ class MainWindow(QMainWindow):
                 image = self.overlayImage(image, imageThermal, alpha=0.7)
                 
                 # debugging for calibration
-                pixels_origin_first  = np.flip(m=copy.deepcopy(MainWindow.pixel_list), axis=0)
+                pixels_origin_first = copy.deepcopy(MainWindow.pixel_list)
                 pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
+                pixels_origin_first = np.rot90(pixels_origin_first, k=1)
                 current_pixel = pd.DataFrame(data=pixels_origin_first)
                 thermal_log.info(f'''\n{current_pixel}\n''')
 
@@ -225,16 +272,9 @@ class MainWindow(QMainWindow):
 
             self.count_FPS+=1
 
-            # print('\n>>>>>>>> before\n [main2.py onRpi]',
-            #         '\n*dict_name: ', dict_name, 
-            #         '\n*obj_bbox : ', id(obj_bbox), obj_bbox, 
-            #         '\n*dict_suhu: ', dict_suhu,
-            #         '\nmyPeople'    , myPeople,
-            #         '\n>>>>>>>>')
 
             if len(obj_bbox.keys()) > 0:
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                # print('\n>>>>>>>>\n main2.py list_bboxes:', list_bboxes, obj_bbox, '\n>>>>>>>>')
                 for (objectID, single_bbox) in obj_bbox.items():
 
                     id_name = int(np.array(single_bbox).sum())
@@ -242,14 +282,9 @@ class MainWindow(QMainWindow):
                         myPeople[objectID] = ['no name', 'wait', (0,0)]
 
                     if id_name in list(dict_name.keys()):
-                        # print('yuhu')
                         single_name = dict_name[id_name]
                         myPeople[objectID] = [single_name, 'wait', (0,0)]
-                        # print(dict_suhu, dict_name)
                         self.insert_list(single_name)
-                        main_log.info(f'[People In] {single_name}')
-
-
                     
                     if len(dict_suhu) !=0 :
                         if objectID not in list(myPeople.keys()):
@@ -262,13 +297,7 @@ class MainWindow(QMainWindow):
                             myPeople[objectID][1] = suhu_max 
                             myPeople[objectID][2] = coordinate
                             main_log.info(f'[People In with Therm] {myPeople[objectID]}')
-            # print('\n<<<<<<<< after\n [main2.py onRpi]',
-            #         '\n*dict_name:' , dict_name, 
-            #         '\n*obj_bbox: ' , id(obj_bbox), obj_bbox, 
-            #         '\n*dict_suhu: ', dict_suhu,
-            #         '\nmyPeople'    , myPeople,
-            #         '\n>>>>>>>>')
-
+                            # self.insertDBServer(myPeople[objectID])
         else:
             pred_name='face'
             suhu = 36.8
@@ -277,10 +306,8 @@ class MainWindow(QMainWindow):
         if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
             obj_center, obj_bbox = ct.update(boxes)
             self.deleteExpireObject(myPeople, obj_center)
-            # print('# Global Tracking', obj_center)
 
 
-        # print("HEYY", myPeople, obj_center, boxes)
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             # print("test", myPeople, objectID)
@@ -321,9 +348,11 @@ class MainWindow(QMainWindow):
 
             start_y, end_y = cal_y_start + 0, cal_y_end + 320
             start_x, end_x = cal_x_start + 0, cal_x_end + 400
+            total_length_y = abs(start_y) + end_y
+            total_length_x = abs(start_x) + end_x
             
-            for ix,x in enumerate(range(start_x, end_x, end_x//8)):
-                for iy, y in enumerate(range(start_y, end_y, end_y//8)):
+            for ix,x in enumerate(range(start_x, end_x, total_length_x//8)):
+                for iy, y in enumerate(range(start_y, end_y, total_length_y//8)):
                     
                     if (ix == 4 and iy == 4):
                         thickness = 2
@@ -370,7 +399,6 @@ class MainWindow(QMainWindow):
     def processing_sensors(self):
         if on_RPi:
             main_input()
-
 
     def getNewObject(self, myObj, trackingObj):
         futureObject = set(trackingObj.keys()).difference(myObj.keys())

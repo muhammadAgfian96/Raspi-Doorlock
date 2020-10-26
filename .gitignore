@@ -9,6 +9,16 @@ utils/ThermCAM/__pycache__
 utils/ThermCAM/haha2.csv
 utils/ThermCAM/haha.csv
 utils/ThermCAM/data_therm.py
-utils/coba2.ipynb
 utils/ThermCAM/testSensor rapih.ipynb
 utils/ThermCAM/testAlgorithm.ipynb
+
+
+utils/coba2.ipynb
+
+db_test.py
+models.py
+
+thermal_logs
+sensor_logs
+raspi_logs
+main_logs

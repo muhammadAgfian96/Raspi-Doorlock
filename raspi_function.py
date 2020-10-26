@@ -177,7 +177,7 @@ def main_input():
     
     # ---- sensor jarak
     jarak_object =  s_jarak.detect(v=True)
-    if  jarak_object < 7 and (time.time() - state_time_sJarak > 0.2):
+    if  jarak_object > 3 and jarak_object < 7 and (time.time() - state_time_sJarak > 0.2):
         signal_open += 1
         state_time_sJarak = time.time()
 
@@ -185,6 +185,7 @@ def main_input():
         signal_open = 0
         open_status_sJarak = True
         first_time_jarak = True
+        raspi_log.info(f"[s_jarak] {jarak_object} cm")
 
 
     # ---- RFID
@@ -193,9 +194,9 @@ def main_input():
         counting_RFID = 0
         uid = my_card.read_card()
         # print("[RFID CARD]", uid)
-        raspi_log.info(f'[main_input] RFID Card: {uid}')
         if uid == "249108142":
             open_status_RFID = True
+            raspi_log.info(f'[main_input] RFID Card: {uid}')
 
 
 def main_output():
@@ -231,5 +232,5 @@ def main_output():
             else:
                 relay_magnet.off(v=True)
                 
+        raspi_log.info(f'[main_output] the door is open? {hasil}')
     # print("[Actuators] The Door is Open? ", hasil)
-    raspi_log.info(f'[main_output] the door is open? {hasil}')

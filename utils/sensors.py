@@ -184,27 +184,47 @@ class CamTherm(AMG8833):
     def _map(self, x, in_min, in_max, out_min, out_max):
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-    def _regresikan(self, pixels_list, shape=(8,8)):
-        print(type(pixels_list), pixels_list)
-        sensor_log.debug(f"[Cam Thermal] \ntype: {type(pixels_list)} \nisi: {pixels_list}")
-        rata2 = np.array(list(pixels_list)).mean()
-        pixels_2d = np.array(pixels_list).reshape(shape)
-        
-        logical_greater = pixels_2d > rata2 + 1.7
-        logical_minor = pixels_2d < rata2 +0.7
-        
-        factor_greater = pixels_2d[logical_greater] * (-0.014523) + 1.456925
-        factor_minor = pixels_2d[logical_minor] * (-0.009277) + 1.115660
-        
-        greater = pixels_2d[logical_greater] * factor_greater
-        minor = pixels_2d[logical_minor] * factor_minor
-        
-        pixels_2d[logical_greater] = greater
-        pixels_2d[logical_minor] = minor
+    def _regresikan_part_1(self, pixels_list):
 
-        pixels_1d = pixels_2d.reshape((1, max(np.array(list(pixels_list)).reshape(-1,1).shape)))
+        sensor_log.debug(f"[Cam Thermal] \ntype: {type(pixels_list)} \nisi: {pixels_list}")
+        arr_input = np.array(pixels_list[:])
         
-        return pixels_2d, list(pixels_1d[0]), rata2
+        arr1_mean = arr_input.mean()
+        arr1_min = arr_input.min()
+        arr1_max = arr_input.max()
+        sensor_log.debug(f"[Cam Thermal] {arr_input.shape} -> mean: {arr1_mean} | min: {arr1_min} | max: {arr1_max}")
+        
+        arr_input *= (arr_input/arr1_mean)
+
+        return list(arr_input), arr1_mean
+    
+    def _regresikan_part_2(self, arr_input, arr_mean):
+        """
+        arr_input is 1,64 list for bicubicData
+        """
+
+        # has 2d dimentions
+        expanded_arr = griddata(self._points, arr_input[:], (self._grid_x, self._grid_y), method='cubic')    
+        expanded_arr *= (expanded_arr/arr1_mean)
+        expanded_arr_mean = expanded_arr.mean()
+        expanded_arr_max = expanded_arr.max()
+        expanded_arr_min = expanded_arr.min()
+        sensor_log.debug(f"[Cam Thermal] {expanded_arr.shape} -> mean: {expanded_arr_mean} | min: {expanded_arr_min} | max: {expanded_arr_max}")
+
+        # pisahkan 2 bagian --> great than avg and lower than avg
+        idx_greater = expanded_arr >= expanded_arr_mean
+        idx_minor = expanded_arr < expanded_arr_mean
+        
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.456925
+        factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.115660
+        
+        new_exp_arr_greater = expanded_arr[logical_greater] * factor_greater
+        new_exp_arr_minor = expanded_arr[logical_minor] * factor_minor
+        
+        expanded_arr[logical_greater] = new_exp_arr_greater
+        expanded_arr[logical_minor] = new_exp_arr_minor
+
+        return expanded_arr
 
     def _thermalToImageAndData(self, pixelsThermal):
         """
@@ -217,11 +237,17 @@ class CamTherm(AMG8833):
             - image_thermal = image thermal in 0 - 255
             - data_thermal  = data thermal in celcius
         """
-        bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')    
+        regression_pixel, pixels_mean = self._regresikan_part_1(pixelsThermal[:])
+        bicubicData = self._regresikan_part_2(regression_pixel, pixels_mean)
+        # bicubicDataNew = bicubicData[:]
+        # bicubicDataNew = bicubicDataNew.reshape((1,))
+        # bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')    
         
 
-        pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in pixelsThermal]
-        bicubicImage = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
+
+        new_pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
+        bicubicImage = self._regresikan_part_2(new_pixelsThermal, np.mean(new_pixelsThermal))
+        # bicubicImage = griddata(self._points, new_pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
         
@@ -329,16 +355,14 @@ class CamTherm(AMG8833):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         dictSuhu = {}
-        print('[getThermal] id obej',id(object_bboxes))
         bboxes = list(object_bboxes.values())
         ids = list(object_bboxes.keys())
 
         pixels_origin_first = self._cam.read_temp()
 
-        pixels_2d, pixels_origin, rata2 = self._regresikan(copy.deepcopy(pixels_origin_first))
-        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin)
-        print('HERE', bboxes, ids, )
-
+        # pixels_2d, pixels_origin, rata2 = self._regresikan(copy.deepcopy(pixels_origin_first))
+        # pixel_origin = self._calibration(pixels_origin_first)
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin_first)
         imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
         for bbox, idx in zip(bboxes, ids):
@@ -412,10 +436,11 @@ class CamTherm(AMG8833):
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
         pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
-        
-        #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0)
-        #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
-        
+        pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
+        pixels_origin_first = np.rot90(pixels_origin_first, k=1)
+        #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0) # flip horizontal
+        pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1) # flip vertical
+
         # print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
         sensor_log.info(f'[Cam Thermal] dict suhu {imageThermal.shape}, {dataThermal.shape}, {dictSuhu}')
         return imageThermal, dataThermal, dictSuhu, pixels_origin_first
