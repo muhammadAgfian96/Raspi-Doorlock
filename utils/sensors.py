@@ -18,7 +18,10 @@ sensor_log = setup_logger(name = 'sensor', log_file = 'sensor_logs',
                         folder_name='sensor_logs', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
                         interval=2, backupCount=5, when='h')
-
+calibration_log = setup_logger(name = 'calibration', log_file = 'calibration_data', 
+                        folder_name='sensor_logs', level = logging.DEBUG,
+                        removePeriodically=True, to_console=True,
+                        interval=30, backupCount=5, when='m')
 
 class PushButton():
     def __init__(self, pin_tombol):
@@ -108,7 +111,7 @@ class Jarak():
         if (m!=None and b!=None):
             # faktor regresi linear
             distance = m*distance+b
-        if v:
+        if v and distance < 7:
             sensor_log.info("[Sensor Jarak] {:.2f} cm".format(distance))
         return distance
 
@@ -215,9 +218,9 @@ class CamTherm(AMG8833):
         idx_greater = expanded_arr >= expanded_arr_mean
         idx_minor = expanded_arr < expanded_arr_mean
         
-        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.682925
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.467925
         factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.215660
-        
+
         new_exp_arr_greater = expanded_arr[idx_greater] * factor_greater
         new_exp_arr_minor = expanded_arr[idx_minor] * factor_minor
         
@@ -401,7 +404,7 @@ class CamTherm(AMG8833):
                                                              titikY = coor_y, 
                                                              bbox = bboxScalled,
                                                              )
-            sensor_log.info(f"[regression] {maxSuhu}\t{depth}")
+            calibration_log.info(f"[suhu | jarak], {maxSuhu}, {depth}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
                              'max' : maxSuhu,}
@@ -447,5 +450,5 @@ class CamTherm(AMG8833):
         pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1) # flip vertical
 
         # print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
-        sensor_log.info(f'[Cam Thermal] dict suhu {imageThermal.shape}, {dataThermal.shape}, {dictSuhu}')
+        # sensor_log.info(f'[Cam Thermal] dict suhu {imageThermal.shape}, {dataThermal.shape}, {dictSuhu}')
         return imageThermal, dataThermal, dictSuhu, pixels_origin_first
