@@ -156,10 +156,10 @@ def main_vision():
         list_bboxes = []
     
     main_output()
-    raspi_log.debug(f"[main_vision] dict_name: {dict_name}\n")
     if len(list_bboxes) == 0:
         return None, None, statusNewPeople
     else:
+        raspi_log.debug(f"[main_vision] dict_name: {dict_name}\n")
         return list_bboxes, dict_name, statusNewPeople
         
 

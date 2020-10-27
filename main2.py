@@ -335,6 +335,7 @@ class MainWindow(QMainWindow):
         if self.count_FPS == 70:
             self.count_FPS = 0
 
+        kalibrasi_mode = False
         if kalibrasi_mode:
             image = cv2.resize(image, (400,300))
             mean_pix = np.mean(MainWindow.pixel_list)

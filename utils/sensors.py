@@ -192,7 +192,7 @@ class CamTherm(AMG8833):
         arr1_mean = arr_input.mean()
         arr1_min = arr_input.min()
         arr1_max = arr_input.max()
-        sensor_log.debug(f"[Cam Thermal] {arr_input.shape} -> mean: {arr1_mean} | min: {arr1_min} | max: {arr1_max}")
+        sensor_log.debug(f"** [Cam Thermal] {arr_input.shape} -> mean: {arr1_mean} | min: {arr1_min} | max: {arr1_max}")
         
         arr_input *= (arr_input/arr1_mean)
 
@@ -209,7 +209,7 @@ class CamTherm(AMG8833):
         expanded_arr_mean = expanded_arr.mean()
         expanded_arr_max = expanded_arr.max()
         expanded_arr_min = expanded_arr.min()
-        sensor_log.debug(f"[Cam Thermal] {expanded_arr.shape} -> mean: {expanded_arr_mean} | min: {expanded_arr_min} | max: {expanded_arr_max}")
+        sensor_log.debug(f"** [Cam Thermal] {expanded_arr.shape} -> mean: {expanded_arr_mean} | min: {expanded_arr_min} | max: {expanded_arr_max}")
 
         # pisahkan 2 bagian --> great than avg and lower than avg
         idx_greater = expanded_arr >= expanded_arr_mean
@@ -239,15 +239,16 @@ class CamTherm(AMG8833):
         """
         regression_pixel, pixels_mean = self._regresikan_part_1(pixelsThermal[:])
         bicubicData = self._regresikan_part_2(regression_pixel, pixels_mean)
+
         # bicubicDataNew = bicubicData[:]
         # bicubicDataNew = bicubicDataNew.reshape((1,))
         # bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')    
         
 
 
-        C = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
-        bicubicImage = self._regresikan_part_2(new_pixelsThermal, np.mean(new_pixelsThermal))
-        # bicubicImage = griddata(self._points, new_pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
+        new_pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
+        # bicubicImage = self._regresikan_part_2(new_pixelsThermal, np.mean(new_pixelsThermal))
+        bicubicImage = griddata(self._points, new_pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
 
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
         
@@ -371,6 +372,10 @@ class CamTherm(AMG8833):
             bbox[2] = [bbox[2] if bbox[2] >= 0 else 0][0]
             bbox[3] = [bbox[3] if bbox[3] >= 0 else 0][0]
 
+            ukuran_x = bbox[2]-bbox[0]
+
+            depth = round(367 + (-7.25 * ukuran_x) + 0.0571*(ukuran_x**2) + (-0.00016*(ukuran_x**3)), 2)
+            
             print('bbox sblm scalling', bbox)
             # Scalling the origin bbox so we can go with crop thermalImage
             bboxScalled, bbox = self._scalling(image, bbox, self._ukuran)
@@ -396,7 +401,7 @@ class CamTherm(AMG8833):
                                                              titikY = coor_y, 
                                                              bbox = bboxScalled,
                                                              )
-
+            sensor_log.info(f"[regression] {maxSuhu}\t{depth}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
                              'max' : maxSuhu,}
