@@ -180,10 +180,10 @@ class CamTherm(AMG8833):
 
         # for moving avg 
         self._idx = 0
-        self._sum_read = 0
         self.window_size = 7
-        self.avg = 0
-        self._reading_list = [0 for i in range(self.window_size)]
+        self.avg = np.zeros((self.window_size))
+        self._reading_list = np.zeros((self.window_size, 64))
+        self._sum_read = np.zeros((self.window_size))
 
 
 
@@ -353,13 +353,15 @@ class CamTherm(AMG8833):
 
 
     def read_therm(self,):
-        for i in range(self.window_size):
-            self._sum_read -= self._reading_list[self._idx];       #Remove the oldest entry from the sum
-            val = self._cam.read_temp();        #Read the next sensor value
-            self._reading_list[self._idx] = val;           #Add the newest reading to the window
+        for i in range(3):
+            self._sum_read -= self._reading_list[self.idx]       #Remove the oldest entry from the sum
+            val = np.array(self._cam.read_temp())        #Read the next sensor value
+            
+            self._reading_list[self.idx] = val;           #Add the newest reading to the window
             self._sum_read = self._sum_read + val;                 #Add the newest reading to the sum_read
             self.idx = (self.idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
-            avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
+            
+        avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
 
         return val, avg
 
@@ -381,10 +383,8 @@ class CamTherm(AMG8833):
         ids = list(object_bboxes.keys())
 
         pixels_origin_first = self._cam.read_temp()
-
-        # pixels_2d, pixels_origin, rata2 = self._regresikan(copy.deepcopy(pixels_origin_first))
-        # pixel_origin = self._calibration(pixels_origin_first)
-        imageThermal, dataThermal = self._thermalToImageAndData(pixels_origin_first)
+        pixels_val, pixels_avg = self.read_therm()
+        imageThermal, dataThermal = self._thermalToImageAndData(pixels_avg)
         # imageThermal = cv2.cvtColor(np.array(imageThermal), cv2.COLOR_RGB2BGR)
 
         for bbox, idx in zip(bboxes, ids):
