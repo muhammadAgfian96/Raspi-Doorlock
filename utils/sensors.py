@@ -178,6 +178,13 @@ class CamTherm(AMG8833):
         self._colors = list(self._start_color.range_to(Color("red"), self._COLORDEPTH))
         self._colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in self._colors]
 
+        # for moving avg 
+        self._idx = 0
+        self._sum_read = 0
+        self.window_size = 7
+        self.avg = 0
+        self._reading_list = [0 for i in range(self.window_size)]
+
 
 
 	#some utility functions
@@ -197,7 +204,7 @@ class CamTherm(AMG8833):
         arr1_max = arr_input.max()
         sensor_log.debug(f"** [Cam Thermal] {arr_input.shape} -> mean: {arr1_mean} | min: {arr1_min} | max: {arr1_max}")
         
-        arr_input *= (arr_input/arr1_mean)
+        # arr_input *= (arr_input/arr1_mean)
 
         return list(arr_input), arr1_mean
     
@@ -339,11 +346,22 @@ class CamTherm(AMG8833):
         Arguments:
             - cropThermal : (np.array - celcius) one crop bbox Data-Thermal in 2d array
         """
-        maxValue = np.max(cropThermal)
         (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
+        # np.sort()
+        maxValue = np.max(cropThermal)
         return maxValue, (x, y)
 
 
+    def read_therm(self,):
+        for i in range(self.window_size):
+            self._sum_read -= self._reading_list[self._idx];       #Remove the oldest entry from the sum
+            val = self._cam.read_temp();        #Read the next sensor value
+            self._reading_list[self._idx] = val;           #Add the newest reading to the window
+            self._sum_read = self._sum_read + val;                 #Add the newest reading to the sum_read
+            self.idx = (self.idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
+            avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
+
+        return val, avg
 
     def getThermal(self, image, object_bboxes, youDebugging=False):
         """
@@ -404,7 +422,7 @@ class CamTherm(AMG8833):
                                                              titikY = coor_y, 
                                                              bbox = bboxScalled,
                                                              )
-            calibration_log.info(f"[suhu | jarak], {maxSuhu}, {depth}")
+            calibration_log.info(f"not_calibrated {depth} {maxSuhu}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
                              'max' : maxSuhu,}
