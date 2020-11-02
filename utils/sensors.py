@@ -19,7 +19,7 @@ sensor_log = setup_logger(name = 'sensor', log_file = 'sensor_logs',
                         removePeriodically=True, to_console=True,
                         interval=2, backupCount=5, when='h')
 calibration_log = setup_logger(name = 'calibration', log_file = 'calibration_data', 
-                        folder_name='sensor_logs', level = logging.DEBUG,
+                        folder_name='calibration', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
                         interval=30, backupCount=5, when='m')
 
@@ -180,10 +180,10 @@ class CamTherm(AMG8833):
 
         # for moving avg 
         self._idx = 0
-        self.window_size = 7
-        self.avg = np.zeros((self.window_size))
+        self.window_size = 20
+        self.avg = np.zeros((64))
         self._reading_list = np.zeros((self.window_size, 64))
-        self._sum_read = np.zeros((self.window_size))
+        self._sum_read = np.zeros((64))
 
 
 
@@ -348,18 +348,19 @@ class CamTherm(AMG8833):
         """
         (y,x) = unravel_index(cropThermal.argmax(), cropThermal.shape)
         # np.sort()
+        avgValue = np.mean(cropThermal)
         maxValue = np.max(cropThermal)
         return maxValue, (x, y)
 
 
     def read_therm(self,):
-        for i in range(3):
-            self._sum_read -= self._reading_list[self.idx]       #Remove the oldest entry from the sum
+        for i in range(self.window_size):
+            self._sum_read -= self._reading_list[self._idx]       #Remove the oldest entry from the sum
             val = np.array(self._cam.read_temp())        #Read the next sensor value
             
-            self._reading_list[self.idx] = val;           #Add the newest reading to the window
+            self._reading_list[self._idx] = val;           #Add the newest reading to the window
             self._sum_read = self._sum_read + val;                 #Add the newest reading to the sum_read
-            self.idx = (self.idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
+            self._idx = (self._idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
             
         avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
 
@@ -422,7 +423,14 @@ class CamTherm(AMG8833):
                                                              titikY = coor_y, 
                                                              bbox = bboxScalled,
                                                              )
-            calibration_log.info(f"not_calibrated {depth} {maxSuhu}")
+            #factor_x =0.000544*depth + 1.08
+            #maxSuhu = maxSuhu * factor_x
+            #factor_x = 0.000925*depth + 1.05
+            #error_margin = 0.0271*depth + 1.89
+            
+            #maxSuhu = maxSuhu + error_margin
+            
+            calibration_log.info(f"not_calibrated {ukuran_x} {maxSuhu}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
                              'max' : maxSuhu,}

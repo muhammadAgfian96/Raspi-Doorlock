@@ -47,7 +47,7 @@ bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei',
 
 imageThermal = np.zeros((400,300,3))
 suhu = '0 C'
-ct = CentroidTracker(maxDisappeared=16)
+ct = CentroidTracker(maxDisappeared=7)
 getData = False
 
 
@@ -271,7 +271,7 @@ class MainWindow(QMainWindow):
                 dict_name = {}
 
             self.count_FPS+=1
-
+            kosong=False
 
             if len(obj_bbox.keys()) > 0:
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
@@ -298,6 +298,8 @@ class MainWindow(QMainWindow):
                             myPeople[objectID][2] = coordinate
                             main_log.info(f'[People In with Therm] {myPeople[objectID]}')
                             # self.insertDBServer(myPeople[objectID])
+            else:
+                kosong = True
         else:
             pred_name='face'
             suhu = 36.8
@@ -307,11 +309,15 @@ class MainWindow(QMainWindow):
             obj_center, obj_bbox = ct.update(boxes)
             self.deleteExpireObject(myPeople, obj_center)
 
-
+        depth_max = -1
         # draw bbox
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             # print("test", myPeople, objectID)
-
+            ukuran_x = single_bbox[2]-single_bbox[0]
+            depth = round(367 + (-7.25 * ukuran_x) + 0.0571*(ukuran_x**2) + (-0.00016*(ukuran_x**3)), 2)
+            if depth > depth_max :
+                depth_max = depth
+                
             if objectID in myPeople.keys():
                 # print("in 1 : ada kotak dan nama")
                 draw_box_name(bbox = single_bbox, 
@@ -328,8 +334,18 @@ class MainWindow(QMainWindow):
             else:
                 # print("in 3 : ", len(boxes))
                 continue
-
-
+        print("data max", depth_max)
+        
+        """
+        if kosong:
+            image = np.zeros((300,400, 3), np.uint8)
+            image = cv2.putText(image, "CEK SUHU DISINI", (75, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        elif (depth_max <0 or depth_max>100):
+            image = np.zeros((300,400, 3), np.uint8)
+            image = cv2.putText(image, "CEK SUHU DISINI", (75, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)            
+            image = cv2.putText(image, "Terlalu Jauh!", (125, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0,0), 2)            
+        """
+            
         FPS =  1/ (time.time()-start_time)     
         cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
         if self.count_FPS == 70:

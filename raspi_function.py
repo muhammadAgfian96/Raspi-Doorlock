@@ -45,7 +45,7 @@ s_jarak  = sensors.Jarak(p_trig_jarak, p_echo_jarak)
 relay_magnet = sensors.Relay(p_magnet_relay, name="magnet")
 relay_led = sensors.Relay(p_led_relay, name="led")
 my_card = sensors.Card()
-thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=60j, minTemp=24, maxTemp=34)
+thermalCam = sensors.CamTherm(alamat=0x68, ukuran_pix=80j, minTemp=30, maxTemp=38)
 
 #------- GET FROM SERVER
 addr_server = "tcp://11.11.11.11:5556"
