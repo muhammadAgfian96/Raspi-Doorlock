@@ -158,7 +158,7 @@ class Card(MFRC522):
             return None
 
 class CamTherm(AMG8833):
-    def __init__(self, alamat, ukuran_pix=120j, minTemp=25, maxTemp=35):
+    def __init__(self, alamat, ukuran_pix=120j, minTemp=26, maxTemp=36):
         self._cam = AMG8833(addr=alamat)
 
         self._points = [(math.floor(ix / 8), (ix % 8)) for ix in range(0, 64)]
@@ -225,7 +225,7 @@ class CamTherm(AMG8833):
         idx_greater = expanded_arr >= expanded_arr_mean
         idx_minor = expanded_arr < expanded_arr_mean
         
-        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.467925
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.687925
         factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.215660
 
         new_exp_arr_greater = expanded_arr[idx_greater] * factor_greater
@@ -254,13 +254,14 @@ class CamTherm(AMG8833):
         # bicubicDataNew = bicubicDataNew.reshape((1,))
         # bicubicData = griddata(self._points, pixelsThermal, (self._grid_x, self._grid_y), method='cubic')    
         
-
-
-        new_pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in regression_pixel]
+        new_pixelsThermal = regression_pixel[:]
+        new_pixelsThermal *= new_pixelsThermal/pixels_mean
+        new_pixelsThermal = [self._map(p, self._MINTEMP, self._MAXTEMP, 0, self._COLORDEPTH - 1) for p in new_pixelsThermal]
         # bicubicImage = self._regresikan_part_2(new_pixelsThermal, np.mean(new_pixelsThermal))
         bicubicImage = griddata(self._points, new_pixelsThermal, (self._grid_x, self._grid_y), method='cubic')
-
+        
         data_img = np.zeros((bicubicImage.shape[0],bicubicImage.shape[1],3), dtype=np.uint8)
+        
         
         # mapping celcius into colors
         for ix, row in enumerate(bicubicImage):
@@ -357,10 +358,10 @@ class CamTherm(AMG8833):
         for i in range(self.window_size):
             self._sum_read -= self._reading_list[self._idx]       #Remove the oldest entry from the sum
             val = np.array(self._cam.read_temp())        #Read the next sensor value
-            
-            self._reading_list[self._idx] = val;           #Add the newest reading to the window
-            self._sum_read = self._sum_read + val;                 #Add the newest reading to the sum_read
-            self._idx = (self._idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
+
+            self._reading_list[self._idx] = val           #Add the newest reading to the window
+            self._sum_read = self._sum_read + val                 #Add the newest reading to the sum_read
+            self._idx = (self._idx+1) % self.window_size   #Increment the index, and wrap to 0 if it exceeds the window size
             
         avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
 
@@ -423,13 +424,8 @@ class CamTherm(AMG8833):
                                                              titikY = coor_y, 
                                                              bbox = bboxScalled,
                                                              )
-            #factor_x =0.000544*depth + 1.08
-            #maxSuhu = maxSuhu * factor_x
-            #factor_x = 0.000925*depth + 1.05
-            #error_margin = 0.0271*depth + 1.89
-            
-            #maxSuhu = maxSuhu + error_margin
-            
+
+
             calibration_log.info(f"not_calibrated {ukuran_x} {maxSuhu}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
@@ -474,7 +470,5 @@ class CamTherm(AMG8833):
         pixels_origin_first = np.rot90(pixels_origin_first, k=1)
         #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0) # flip horizontal
         pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1) # flip vertical
-
-        # print('\n==== dict suhu >>', imageThermal.shape, dataThermal.shape, dictSuhu)
-        # sensor_log.info(f'[Cam Thermal] dict suhu {imageThermal.shape}, {dataThermal.shape}, {dictSuhu}')
+        
         return imageThermal, dataThermal, dictSuhu, pixels_origin_first
