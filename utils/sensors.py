@@ -19,7 +19,7 @@ sensor_log = setup_logger(name = 'sensor', log_file = 'sensor_logs',
                         removePeriodically=True, to_console=True,
                         interval=2, backupCount=5, when='h')
 calibration_log = setup_logger(name = 'calibration', log_file = 'calibration_data', 
-                        folder_name='sensor_logs', level = logging.DEBUG,
+                        folder_name='calibration', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
                         interval=30, backupCount=5, when='m')
 
@@ -225,7 +225,7 @@ class CamTherm(AMG8833):
         idx_greater = expanded_arr >= expanded_arr_mean
         idx_minor = expanded_arr < expanded_arr_mean
         
-        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.467925
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.687925
         factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.215660
 
         new_exp_arr_greater = expanded_arr[idx_greater] * factor_greater
@@ -353,13 +353,13 @@ class CamTherm(AMG8833):
 
 
     def read_therm(self,):
-        for i in range(3):
-            self._sum_read -= self._reading_list[self.idx]       #Remove the oldest entry from the sum
+        for i in range(self.window_size):
+            self._sum_read -= self._reading_list[self._idx]       #Remove the oldest entry from the sum
             val = np.array(self._cam.read_temp())        #Read the next sensor value
             
-            self._reading_list[self.idx] = val;           #Add the newest reading to the window
-            self._sum_read = self._sum_read + val;                 #Add the newest reading to the sum_read
-            self.idx = (self.idx+1) % self.window_size;   #Increment the index, and wrap to 0 if it exceeds the window size
+            self._reading_list[self._idx] = val           #Add the newest reading to the window
+            self._sum_read = self._sum_read + val                 #Add the newest reading to the sum_read
+            self._idx = (self._idx+1) % self.window_size   #Increment the index, and wrap to 0 if it exceeds the window size
             
         avg = self._sum_read / self.window_size;      #Divide the sum of the window by the window size for the result
 
