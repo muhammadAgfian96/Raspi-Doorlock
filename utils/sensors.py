@@ -216,10 +216,12 @@ class CamTherm(AMG8833):
         # has 2d dimentions
         expanded_arr = griddata(self._points, arr_input[:], (self._grid_x, self._grid_y), method='cubic')    
         expanded_arr *= (expanded_arr/arr_mean)
+
         expanded_arr_mean = expanded_arr.mean()
         expanded_arr_max = expanded_arr.max()
         expanded_arr_min = expanded_arr.min()
         sensor_log.debug(f"** [Cam Thermal] {expanded_arr.shape} -> mean: {expanded_arr_mean} | min: {expanded_arr_min} | max: {expanded_arr_max}")
+        calibration_log.info(f"1m {str(expanded_arr_max).replace('.',',')}")
 
         # pisahkan 2 bagian --> great than avg and lower than avg
         idx_greater = expanded_arr >= expanded_arr_mean
@@ -426,7 +428,7 @@ class CamTherm(AMG8833):
                                                              )
 
 
-            calibration_log.info(f"not_calibrated {ukuran_x} {maxSuhu}")
+            #calibration_log.info(f"not_calibrated {ukuran_x} {maxSuhu}")
             # insert to data
             dictSuhu[idx] = {'coordinate': (new_coor_x, new_coor_y), 
                              'max' : maxSuhu,}

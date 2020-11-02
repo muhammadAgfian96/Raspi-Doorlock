@@ -71,6 +71,13 @@ thermal_log = setup_logger(name = 'thermal', log_file = 'thermal_logs',
                         interval=5, backupCount=10, when='m', 
                         formatter=log_thermal_formatter)
 
+calibration_log_main = setup_logger(name = 'calibration_main', log_file = 'calibration_main_data', 
+                        folder_name='calibration', level = logging.DEBUG,
+                        removePeriodically=True, to_console=True,
+                        interval=30, backupCount=5, when='m')
+
+
+
 waiting_image = cv2.imread('screen_saver.jpg')
 waiting_image = cv2.resize(waiting_image, (512,512))
 waiting_image = cv2.cvtColor(waiting_image, cv2.COLOR_BGR2RGB)
@@ -238,9 +245,9 @@ class MainWindow(QMainWindow):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         rects = self.detector.detectMultiScale(image = gray, 
-                                               scaleFactor=1.1, 
+                                               scaleFactor=1.2, 
                                                minNeighbors=5, 
-                                               minSize=(30, 30),
+                                               minSize=(45, 45),
                                                maxSize=(150,150),
                                                flags=cv2.CASCADE_SCALE_IMAGE,
                                                )
@@ -272,7 +279,9 @@ class MainWindow(QMainWindow):
                 pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
                 pixels_origin_first = np.rot90(pixels_origin_first, k=1)
                 current_pixel = pd.DataFrame(data=pixels_origin_first)
-                thermal_log.info(f'''\n{current_pixel}\n''')
+                # thermal_log.info(f'''\n{current_pixel}\n''')
+                # maksimum_suhu = np.max(pixels_origin_first)
+                # calibration_log_main.info(f'{}')
 
             else:
                 image = self.overlayImage(image, imageThermal, alpha=0.7)
@@ -406,7 +415,7 @@ class MainWindow(QMainWindow):
         #if kosong:
         #    print("kosonng")
         #    image = waiting_image
-        #if too_far_value < 65 and too_far_value > 55:
+        #if too_far_value < 66 and too_far_value > 55:
         #    image = too_far_image
 
         # get image infos
