@@ -180,7 +180,7 @@ class CamTherm(AMG8833):
 
         # for moving avg 
         self._idx = 0
-        self.window_size = 20
+        self.window_size = 10
         self.avg = np.zeros((64))
         self._reading_list = np.zeros((self.window_size, 64))
         self._sum_read = np.zeros((64))
@@ -221,13 +221,16 @@ class CamTherm(AMG8833):
         expanded_arr_max = expanded_arr.max()
         expanded_arr_min = expanded_arr.min()
         sensor_log.debug(f"** [Cam Thermal] {expanded_arr.shape} -> mean: {expanded_arr_mean} | min: {expanded_arr_min} | max: {expanded_arr_max}")
-        calibration_log.info(f"1m {str(expanded_arr_max).replace('.',',')}")
+        
+        nilai_maks = str(expanded_arr_max).replace('.',',')
+        calibration_log.info(f"{nilai_maks}")
 
         # pisahkan 2 bagian --> great than avg and lower than avg
         idx_greater = expanded_arr >= expanded_arr_mean
         idx_minor = expanded_arr < expanded_arr_mean
         
-        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.687925
+        factor_greater = expanded_arr[idx_greater] * (-0.014523) + 1.580925
+        #factor_greater = -1.82 + 0.176*expanded_arr[idx_greater] + -0.00227*expanded_arr[idx_greater]*expanded_arr[idx_greater]
         factor_minor = expanded_arr[idx_minor] * (-0.009277) + 1.215660
 
         new_exp_arr_greater = expanded_arr[idx_greater] * factor_greater
@@ -467,7 +470,7 @@ class CamTherm(AMG8833):
 
             # ------------------------------- Keperluan Debugging Aja! ------------------------------
             
-        pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
+        #pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
         pixels_origin_first = np.array(pixels_origin_first).reshape((8,8))
         pixels_origin_first = np.rot90(pixels_origin_first, k=1)
         #pixels_origin_first  = np.flip(m=pixels_origin_first, axis=0) # flip horizontal

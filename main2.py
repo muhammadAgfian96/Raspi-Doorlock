@@ -131,8 +131,9 @@ class MainWindow(QMainWindow):
             'user': 'root',
             'password': 'Root@123'
         }
-
-
+        self.delay_face_count = 0
+        self.therm_first = True
+        self.imageThermal = None
         # MOVE WINDOW
         def moveWindow(event):
             # RESTORE BEFORE MOVE
@@ -259,6 +260,8 @@ class MainWindow(QMainWindow):
         obj_center, obj_bbox = ct.update(boxes)
         if len(obj_bbox.keys()) <= 0:
             kosong = True
+            self.delay_face_count = 0
+            self.therm_first = True
 
         # ------- Function for Doorlock --------
         if on_RPi:
@@ -266,13 +269,17 @@ class MainWindow(QMainWindow):
 
             if list_bboxes is not None:
                 obj_center, obj_bbox = ct.update(list_bboxes)
+                
+            if len(boxes) >0:
+                self.delay_face_count +=1
 
-
-            if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
+            #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
+            if self.delay_face_count > 30 and self.therm_first:
+                self.therm_first = False
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
-                imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
-                image = self.overlayImage(image, imageThermal, alpha=0.7)
+                self.imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
+                image = self.overlayImage(image, self.imageThermal, alpha=0.7)
                 
                 # debugging for calibration
                 pixels_origin_first = copy.deepcopy(MainWindow.pixel_list)
@@ -283,8 +290,10 @@ class MainWindow(QMainWindow):
                 # maksimum_suhu = np.max(pixels_origin_first)
                 # calibration_log_main.info(f'{}')
 
-            else:
-                image = self.overlayImage(image, imageThermal, alpha=0.7)
+            if self.imageThermal is None:
+                self.imageThermal = np.zeros((80,80,3))
+            
+            image = self.overlayImage(image, self.imageThermal, alpha=0.7)
 
             if dict_suhu is None:
                 dict_suhu = {}
@@ -335,7 +344,11 @@ class MainWindow(QMainWindow):
             # print("test", myPeople, objectID)
 
             pix_width = single_bbox[2]-single_bbox[0]
-            too_far_value = pix_width if pix_width > too_far_value else too_far_value
+            #print("pix with:", pix_width)
+            if pix_width > too_far_value:
+                too_far_value = pix_width 
+            
+            
             if objectID in myPeople.keys():
                 # print("in 1 : ada kotak dan nama")
                 draw_box_name(bbox = single_bbox, 
@@ -412,11 +425,11 @@ class MainWindow(QMainWindow):
                                 thickness=thickness_text
                                 )
         
-        #if kosong:
-        #    print("kosonng")
-        #    image = waiting_image
-        #if too_far_value < 66 and too_far_value > 55:
-        #    image = too_far_image
+        if kosong:
+            image = waiting_image            
+        else:
+            if too_far_value < 58 or too_far_value > 70 :
+                image = too_far_image
 
         # get image infos
         height, width, channel = image.shape

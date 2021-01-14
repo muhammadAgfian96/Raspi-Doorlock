@@ -7,7 +7,6 @@ import datetime as dt
 # from easydict import EasyDict as edict
 default_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
 
-
 def setup_logger(name:str, log_file:str, level=logging.DEBUG, 
                  folder_name:str='logs', 
                  to_console:bool=False, removePeriodically:bool=False,
