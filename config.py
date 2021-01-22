@@ -1,107 +1,43 @@
-import logging
-import os
-import time
-from logging.handlers import TimedRotatingFileHandler
-import datetime as dt
+from easydict import EasyDict as edict 
+import cv2
 
-# from easydict import EasyDict as edict
-default_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
-
-
-def setup_logger(name:str, log_file:str, level=logging.DEBUG, 
-                 folder_name:str='logs', 
-                 to_console:bool=False, removePeriodically:bool=False,
-                 backupCount:int=7, when:str = 'D', interval:int = 7, 
-                 formatter = default_formatter):
-    """
-    when:       
-        'S': Seconds
-        'M': Minutes
-        'H': Hours
-        'D': Days
-    """
-
-    full_path = folder_name+'/'+log_file
-
-    def filer(self):
-        now = dt.datetime.now()
-        fullTime = ''
-        if when.upper() == 'S': 
-            fullTime = now.strftime("%Y-%m-%d_%H-%M-%S")
-        elif when.upper() == 'M':
-            fullTime = now.strftime("%Y-%m-%d_%H-%M")
-        elif when.upper() == 'H':
-            fullTime = now.strftime("%Y-%m-%d_%H")
-        elif when.upper() == 'D':
-            fullTime = now.strftime("%Y-%m-%d")
-        return full_path + '.'+ fullTime
-
-    def getPathName():
-        now = dt.datetime.now()
-        fullTime = ''
-        if when.upper() == 'S': 
-            fullTime = now.strftime("%Y-%m-%d_%H-%M-%S")
-        elif when.upper() == 'M':
-            fullTime = now.strftime("%Y-%m-%d_%H-%M")
-        elif when.upper() == 'H':
-            fullTime = now.strftime("%Y-%m-%d_%H")
-        elif when.upper() == 'D':
-            fullTime = now.strftime("%Y-%m-%d")
-
-        return full_path + '.'+ fullTime
+def load_image_to_screen(path_img):
+    image = cv2.imread(path_img)
+    image = cv2.resize(image, (512,512))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return image
 
 
-    if os.path.isfile(log_file):
-        file_mode = 'a'
-        # print('mode append')
-    else:
-        file_mode = 'w'
-        # print('mode write')
+def configs():
+    conf = edict()
+
+    # addres server
+    conf.addr = {}
+    conf.addr.server = '11.11.11.11'
+    conf.addr.tcp_server = 'tcp://' + conf.addr.server + ':5556'
     
-
-    if not os.path.exists(folder_name):
-        os.mkdir(path=folder_name)
-
-
-    # setup for rotate time logging
-    path_logs = getPathName()
+    # database server
+    conf.db = {}
+    conf.db.host = '11.11.11.11'
+    conf.db.port = 3306
+    conf.db.database = ''
+    conf.db.user = 'root'
+    conf.db.password = 'Root@123'
     
-    root_logger = logging.getLogger(name)
-    root_logger.setLevel(level)
+    # camera
+    conf.cam = {}
+    conf.cam.raspi = 'http://169.254.85.183:8555'
+    conf.cam.cctv_1 = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
 
-    if removePeriodically:
-        # setup for rotate time logging
-        auto_rotate = TimedRotatingFileHandler(filename= full_path,
-                                               when=when,
-                                               interval=interval,
-                                               backupCount=backupCount)
-        auto_rotate.rotation_filename = filer
-        auto_rotate.setFormatter(formatter)
-        root_logger.addHandler(auto_rotate)
-    else:
-        # setup for file logging
-        # do not use if you wanna use TimedRotatingFileHandler, cause make it double jobs
-        # --------------------------------
-        file_handler = logging.FileHandler(full_path, mode=file_mode)        
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
-
-    if to_console:
-        streamHandler = logging.StreamHandler()
-        streamHandler.setFormatter(formatter)
-        root_logger.addHandler(streamHandler)
-
-    return root_logger
+    # setup doorlock
+    conf.doorlock = {}
+    conf.doorlock.name = 'Kamar A1.6'
+    conf.doorlock.topic_filter = 'pi-depan'
+    conf.doorlock.months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
+                            'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
+                            'Nov', 'Dec']
+    conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
+    conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
 
 
-# How to Use
-# ----------------------------------------------------------------
-"""
-
-test = setup_logger('my_first', 'main.log', folder_name='main_logs',removePeriodically=True,
-                    interval=1, backupCount=2, when='m', to_console=True)
-while True:
-    test.info('hai')
-    time.sleep(10)
-
-"""
+    return conf

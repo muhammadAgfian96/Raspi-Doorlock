@@ -3,7 +3,8 @@ import sys
 import platform
 import numpy as np
 import pandas as pd
-from config import *
+from conf_logging import *
+from config import configs
 
 # GUI FILE
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -75,17 +76,6 @@ calibration_log_main = setup_logger(name = 'calibration_main', log_file = 'calib
                         folder_name='calibration', level = logging.DEBUG,
                         removePeriodically=True, to_console=True,
                         interval=30, backupCount=5, when='m')
-
-
-
-waiting_image = cv2.imread('screen_saver.jpg')
-waiting_image = cv2.resize(waiting_image, (512,512))
-waiting_image = cv2.cvtColor(waiting_image, cv2.COLOR_BGR2RGB)
-
-
-too_far_image = cv2.imread('too_far.jpg')
-too_far_image = cv2.resize(too_far_image, (512,512))
-too_far_image = cv2.cvtColor(too_far_image, cv2.COLOR_BGR2RGB)
 
 
 class MainWindow(QMainWindow):
@@ -539,6 +529,7 @@ class UIFunctions(MainWindow):
             self.ui.lbl_icon_lock.setStyleSheet("border-image: url(:/icons/icon_set/lock.png);")
         str_time = str(datetime.datetime.now().strftime("%A %d-%m-%Y | %H:%M:%S"))        
         print(str_time)
+        exit() # sementara
 
     def showTime(self):
         str_time = str(datetime.datetime.now().strftime("%d-%m-%Y | %H:%M:%S"))

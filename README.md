@@ -52,3 +52,19 @@ v4l2-ctl -d /dev/video0 -c exposure_auto_priority=0
 v4l2-ctl -d /dev/video0 -c exposure_auto=1
 v4l2-ctl -d /dev/video0 -c exposure_auto_absolute=170
 ```
+
+## To-Do for Code
+
+- 
+
+- documentation
+
+- clean code
+
+## To-Do for Code [next Dev]
+
+- setting config raspi via web base
+
+- testing and see problem
+
+- improve camera thermal 
