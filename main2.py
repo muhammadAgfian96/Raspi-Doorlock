@@ -3,50 +3,49 @@ import sys
 import platform
 import numpy as np
 import pandas as pd
-from conf_logging import *
-from config import configs
+import time
+import datetime
+import copy
+import mysql.connector
 
 # GUI FILE
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import (QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject, QObject, QPoint, QRect, QSize, QTime, QUrl, Qt, QEvent, QTimer)
 from PyQt5.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient, QImage)
 from PyQt5.QtWidgets import *
-
 from ui_main2 import Ui_MainWindow
-
-# Raspi Sensors and Actuators
-# from ui_functions import *
-
-try:
-    import RPi.GPIO as gpio
-    on_RPi = True
-    kalibrasi_mode = True
-    from raspi_function import main_input, main_output, main_vision, thermalCam
-    print("work on raspberry pi")
-except (ImportError, RuntimeError):
-    on_RPi = False
-    kalibrasi_mode = False
-    logging.error("We are on Development mode")
-
-from utils.vision_helper import draw_box_name
 
 import cv2
 import imutils
 from imutils.video import VideoStream
+from modules.database import DatabaseHelper
 from utils.centroidtracker import CentroidTracker
+from utils.vision_helper import *
 from collections import OrderedDict
 
-import time
-import datetime
-import copy
-import mysql.connector
+
+
+from config import configs
+from conf_logging import *
+
+conf = get_configs()
+
+try:
+    import RPi.GPIO as gpio
+    on_RPi = True
+    conf.debug.calibration = True
+    
+    # Raspi Sensors and Actuators
+    from raspi_function import main_input, main_output, main_vision, thermalCam
+    print("work on raspberry pi")
+except (ImportError, RuntimeError):
+    on_RPi = False
+    conf.debug.calibration = False
+    logging.error("We are on Development mode")
 
 # global variabel
-bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
-         'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
-         'Nov', 'Dec']
 
-imageThermal = np.zeros((400,300,3))
+conf.var.imageThermal = np.zeros((400,300,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=7)
 getData = False
@@ -82,13 +81,17 @@ class MainWindow(QMainWindow):
     pixel_list = []
 
     def __init__(self):
+
+        # default self--------------------------
         QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        path_cam = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
+
+        # camera setting -----------------------
         if on_RPi:
-            path_cam1 = 'http://11.11.11.12:8555' 
-            self.cap = VideoStream(src=path_cam1).start()
+            cam = conf.cam.raspi
+            # cam = conf.cam.cctv_1
+            self.cap = VideoStream(src=cam).start()
         else:
             path_cam1 = 0
             self.cap = VideoStream(src=path_cam1, usePiCamera=False).start()
@@ -97,12 +100,12 @@ class MainWindow(QMainWindow):
 
         time.sleep(2.0)
 
-        # vision opetarion
+        # for vision opetarion
         self.streamCamera = QTimer()
         self.streamCamera.start(20)
         self.streamCamera.timeout.connect(self.stream_camera_on)
 
-        # input operation
+        # for input operation
         self.streamSensors = QTimer()
         self.streamSensors.start(10)
         self.streamSensors.timeout.connect(self.processing_sensors)
@@ -111,113 +114,42 @@ class MainWindow(QMainWindow):
         self.streamDate = QTimer()
         self.streamDate.setInterval(1000)
         self.streamDate.timeout.connect(self.showTime)
-
         self.streamDate.start()
+
+        # set variabel -------------------
         self.count_FPS = 0
-        self.mysql_config = {
-            'host': '11.11.11.11',
-            'port': 3306,
-            'database': 'raspberry_pi_data',
-            'user': 'root',
-            'password': 'Root@123'
-        }
         self.delay_face_count = 0
         self.therm_first = True
         self.imageThermal = None
-        # MOVE WINDOW
+
+        # set database and get conf from database
+        self.database_do = DatabaseHelper(host = conf.db.host, 
+                                            port = conf.db.port, 
+                                            db_name = conf.db.database, 
+                                            username = conf.db.user, 
+                                            password = conf.db.password)
+
+        # User Interface Initialization ---------------------------------- 
         def moveWindow(event):
-            # RESTORE BEFORE MOVE
+            # restore before we move
             if UIFunctions.returnStatus() == 1:
                 UIFunctions.maximize_restore(self)
 
-            # IF LEFT CLICK MOVE WINDOW
+            # if left_click, it will move
             if event.buttons() == Qt.LeftButton:
                 self.move(self.pos() + event.globalPos() - self.dragPos)
                 self.dragPos = event.globalPos()
                 event.accept()
 
-        # SET TITLE BAR
+        # set title bar
         self.ui.fr_jam.mouseMoveEvent = moveWindow
 
-        ## ==> SET UI DEFINITIONS
+        # set user interface definition
         UIFunctions.uiDefinitions(self)
 
 
-        ## SHOW ==> MAIN WINDOW
+        ## show ==> main window
         self.show()
-
-    ## APP EVENTS
-    def mousePressEvent(self, event):
-        self.dragPos = event.globalPos()
-
-
-    def overlayImage(self, basicImage, transparantImage, alpha=0.4):
-
-        y_offset=basicImage.shape[0]-transparantImage.shape[0]
-        y_offset_2 = basicImage.shape[0]
-        
-        x_offset=0
-        x_offset_2 = x_offset+transparantImage.shape[1]
-        offset = 10
-        
-        output = basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] 
-        
-        output = cv2.addWeighted(src1 = transparantImage, 
-                                 alpha = alpha, 
-                                 src2 = output, 
-                                 beta = 1 - alpha, 
-                                 gamma = 0, 
-                                 dst = output, 
-                                 dtype = cv2.CV_32F,
-                                 )
-        
-        basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] = output
-
-        basicImage = cv2.rectangle(img = basicImage, 
-                                   pt1 = (x_offset+offset, y_offset-offset),
-                                   pt2 = (x_offset_2+offset, y_offset_2-offset), 
-                                   color = (255,255,255),
-                                   thickness=1,
-                                   )
-
-        return basicImage
-
-    def insertDBServer(self, data):
-        """to insert data to MySQL Server
-            - data: 
-                [0] name: string,
-                [1] mask: boolean,
-                [2] suhu: float,
-                [3] door_name: string"""
-        try:
-            connection = mysql.connector.connect(host=self.mysql_config['host'],
-                                                    port=self.mysql_config['port'],
-                                                    database=self.mysql_config['database'],
-                                                    user=self.mysql_config['user'],
-                                                    password=self.mysql_config['password'])
-            cursor = connection.cursor()
-            nama = data[0]
-            mask = False
-            suhu = data[1]
-            door_name = 'Ruang Kerja AITI'
-
-            query_insert_db = f"""INSERT INTO raspi_test(name, mask, suhu, door_name) 
-                                    VALUES ('{name}', {mask}, {suhu}, '{door_name}')"""
-            result  = cursor.execute(query_insert_db)
-            connection.commit()
-            print(f"Success to MySQL: {name}, {mask}, {suhu}, {door_name}")
-            main_log.info(f"Succes Entered Data: {name}, {mask}, {suhu}, {door_name}")
-        except mysql.connector.Error as error :
-            connection.rollback()
-            main_log.error("Failed to MySQL: {}".format(error))
-        except:
-            raise
-        finally:
-            if(connection.is_connected()):
-                cursor.close()
-                connection.close()
-            else:
-                main_log.error("MySQL Cant Connect! Wrong Password/Host/Username/something")
 
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
@@ -356,71 +288,18 @@ class MainWindow(QMainWindow):
                 # print("in 3 : ", len(boxes))
                 continue
         
-        FPS =  1/ (time.time()-start_time)     
-        cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
+        image = draw_fps(image, start_time)
+        
         if self.count_FPS == 70:
             self.count_FPS = 0
 
-        kalibrasi_mode = False
-        if kalibrasi_mode:
-            image = cv2.resize(image, (400,300))
-            mean_pix = np.mean(MainWindow.pixel_list)
-            
-            cal_y_start = -40
-            cal_y_end = 40
-            cal_x_start = 0
-            cal_x_end = 0
-            cal_x_text = 0
-            cal_y_text = 0
-
-            start_y, end_y = cal_y_start + 0, cal_y_end + 320
-            start_x, end_x = cal_x_start + 0, cal_x_end + 400
-            total_length_y = abs(start_y) + end_y
-            total_length_x = abs(start_x) + end_x
-            
-            for ix,x in enumerate(range(start_x, end_x, total_length_x//8)):
-                for iy, y in enumerate(range(start_y, end_y, total_length_y//8)):
-                    
-                    if (ix == 4 and iy == 4):
-                        thickness = 2
-                    else:
-                        thickness = 1
-                        
-                    # line horizontal
-                    cv2.line(img = image,
-                            pt1 = ( x, start_y), 
-                            pt2 = ( x, end_y  ), 
-                            color=(0,255,255),
-                            thickness=thickness)
-                    
-                    # line vertikal
-                    cv2.line(img = image,
-                            pt1 = ( start_x,  + y ), 
-                            pt2 = ( end_x,    + y ), 
-                            color=(0,255,255),
-                            thickness=thickness)
-
-                    if (MainWindow.pixel_list[ix][iy] > mean_pix+0.5):
-                        thickness_text = 2
-                    else: 
-                        thickness_text = 1
-                        
-                    color_text = (0,255,255)
-                    cv2.putText(img = image,
-                                text = str(MainWindow.pixel_list[ix][iy]),
-                                org = (x + 5, y + 25),
-                                fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale = 0.45, 
-                                color = color_text,
-                                thickness=thickness_text
-                                )
+        if conf.debug.calibration:
+            image = draw_mesh_thermal(image, MainWindow.pixel_list)
         
         if kosong:
-            image = waiting_image            
-        else:
-            if too_far_value < 58 or too_far_value > 70 :
-                image = too_far_image
+            image = conf.doorlock.waiting_image
 
+        # Final to show image processing
         # get image infos
         height, width, channel = image.shape
         step = channel * width
@@ -429,10 +308,8 @@ class MainWindow(QMainWindow):
         # show image in img_label
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
 
-    def processing_sensors(self):
-        if on_RPi:
-            main_input()
 
+    # Helpers For Tracking ----------
     def getNewObject(self, myObj, trackingObj):
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
         for i in futureObject:
@@ -452,17 +329,69 @@ class MainWindow(QMainWindow):
         for i in diff:
             del myObj[i]
 
+    # thermal drawing --------------------------
+    def overlayImage(self, basicImage, transparantImage, alpha=0.4):
+        y_offset=basicImage.shape[0]-transparantImage.shape[0]
+        y_offset_2 = basicImage.shape[0]
+        
+        x_offset=0
+        x_offset_2 = x_offset+transparantImage.shape[1]
+        offset = 10
+        
+        output = basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] 
+        
+        output = cv2.addWeighted(src1 = transparantImage, 
+                                 alpha = alpha, 
+                                 src2 = output, 
+                                 beta = 1 - alpha, 
+                                 gamma = 0, 
+                                 dst = output, 
+                                 dtype = cv2.CV_32F,
+                                 )
+        
+        basicImage[y_offset-offset:y_offset_2-offset, x_offset+offset:x_offset_2+offset] = output
+
+        basicImage = cv2.rectangle(img = basicImage, 
+                                   pt1 = (x_offset+offset, y_offset-offset),
+                                   pt2 = (x_offset_2+offset, y_offset_2-offset), 
+                                   color = (255,255,255),
+                                   thickness=1,
+                                   )
+
+        return basicImage
+
+
+
+    # another processing 
+    def processing_sensors(self):
+        if on_RPi:
+            main_input()
+
+
+    # User Interface and Events App UI-----------------
+    def mousePressEvent(self, event):
+        '''
+            if pointers mouse dragged
+        '''
+        self.dragPos = event.globalPos()
+
     def showTime(self):
+        '''
+            display time structure
+        '''
         str_time = str(datetime.datetime.now().strftime("%H:%M"))
         self.ui.lbl_jam.setText("{}".format(str_time))
         hari=str(datetime.datetime.now().strftime("%A")) 
         tanggal=str(datetime.datetime.now().strftime("%d")) 
         idx_bulan=int(datetime.datetime.now().strftime("%m")) 
-        bulan_name = bulan[idx_bulan-1]
+        bulan_name = conf.doorlock.months[idx_bulan-1]
         # hari = hari[:3]
         self.ui.lbl_tanggal.setText(f"{hari}, {tanggal} {bulan_name}")
     
     def insert_list(self,nama):
+        '''
+            display name who is that
+        '''
         time_masuk = "%s" % (str(datetime.datetime.now().strftime("%H:%M:%S"))) #:%S
         self.ui.lbl_name_recog.setText("{} at {}".format(nama, time_masuk))
 

@@ -1,5 +1,6 @@
 from easydict import EasyDict as edict 
 import cv2
+import numpy as np
 
 def load_image_to_screen(path_img):
     image = cv2.imread(path_img)
@@ -8,17 +9,18 @@ def load_image_to_screen(path_img):
     return image
 
 
-def configs():
+def get_configs():
     conf = edict()
 
     # addres server
     conf.addr = {}
-    conf.addr.server = '11.11.11.11'
-    conf.addr.tcp_server = 'tcp://' + conf.addr.server + ':5556'
+    conf.addr.server = '169.254.85.183'
+    conf.addr.tcp_server = f'tcp://{conf.addr.server}:5556'
+    conf.addr.raspi = ''
     
     # database server
     conf.db = {}
-    conf.db.host = '11.11.11.11'
+    conf.db.host = conf.addr.server
     conf.db.port = 3306
     conf.db.database = ''
     conf.db.user = 'root'
@@ -26,7 +28,7 @@ def configs():
     
     # camera
     conf.cam = {}
-    conf.cam.raspi = 'http://169.254.85.183:8555'
+    conf.cam.raspi = f'http://{conf.addr.raspi}:8555'
     conf.cam.cctv_1 = 'rtsp://admin:aiti12345@11.11.11.81:554/Streaming/channels/101'
 
     # setup doorlock
@@ -39,5 +41,14 @@ def configs():
     conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
     conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
 
+    # debugging
+    conf.debug = {}
+    conf.debug.logging = True
+    conf.debug.print = True
+    conf.debug.calibration = True
+
+    # variabel global
+    conf.var = {}
+    conf.var.imageThermal = np.zeros((400,300,3))
 
     return conf

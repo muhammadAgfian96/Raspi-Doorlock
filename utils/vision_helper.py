@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import cv2
+import time
+
 
 def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 	"""
@@ -60,3 +60,62 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 						cv2.FONT_HERSHEY_SIMPLEX, 0.65, color_text, 1,
 						cv2.LINE_AA)
 	return frame
+
+def draw_fps(image, start_time):
+	FPS =  1/ (time.time()-start_time)     
+	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
+    return image
+
+def draw_mesh_thermal(image, pixel_list):
+	image = cv2.resize(image, (400,300))
+	mean_pix = np.mean(pixel_list)
+	
+	cal_y_start = -40
+	cal_y_end = 40
+	cal_x_start = 0
+	cal_x_end = 0
+	cal_x_text = 0
+	cal_y_text = 0
+
+	start_y, end_y = cal_y_start + 0, cal_y_end + 320
+	start_x, end_x = cal_x_start + 0, cal_x_end + 400
+	total_length_y = abs(start_y) + end_y
+	total_length_x = abs(start_x) + end_x
+	
+	for ix,x in enumerate(range(start_x, end_x, total_length_x//8)):
+		for iy, y in enumerate(range(start_y, end_y, total_length_y//8)):
+			
+			if (ix == 4 and iy == 4):
+				thickness = 2
+			else:
+				thickness = 1
+				
+			# line horizontal
+			cv2.line(img = image,
+					pt1 = ( x, start_y), 
+					pt2 = ( x, end_y  ), 
+					color=(0,255,255),
+					thickness=thickness)
+			
+			# line vertikal
+			cv2.line(img = image,
+					pt1 = ( start_x,  + y ), 
+					pt2 = ( end_x,    + y ), 
+					color=(0,255,255),
+					thickness=thickness)
+
+			if (pixel_list[ix][iy] > mean_pix+0.5):
+				thickness_text = 2
+			else: 
+				thickness_text = 1
+				
+			color_text = (0,255,255)
+			cv2.putText(img = image,
+						text = str(pixel_list[ix][iy]),
+						org = (x + 5, y + 25),
+						fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+						fontScale = 0.45, 
+						color = color_text,
+						thickness=thickness_text
+						)
+	return image
