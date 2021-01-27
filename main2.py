@@ -24,9 +24,9 @@ from utils.vision_helper import *
 from collections import OrderedDict
 
 
-
-from config import configs
-from conf_logging import *
+import logging
+from config import get_configs
+from conf_logging import setup_logger
 
 conf = get_configs()
 

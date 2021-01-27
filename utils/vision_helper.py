@@ -1,6 +1,6 @@
 import cv2
 import time
-
+import numpy as np
 
 def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 	"""
@@ -64,7 +64,7 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 def draw_fps(image, start_time):
 	FPS =  1/ (time.time()-start_time)     
 	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
-    return image
+	return image
 
 def draw_mesh_thermal(image, pixel_list):
 	image = cv2.resize(image, (400,300))
@@ -91,14 +91,14 @@ def draw_mesh_thermal(image, pixel_list):
 				thickness = 1
 				
 			# line horizontal
-			cv2.line(img = image,
+			image = cv2.line(img = image,
 					pt1 = ( x, start_y), 
 					pt2 = ( x, end_y  ), 
 					color=(0,255,255),
 					thickness=thickness)
 			
 			# line vertikal
-			cv2.line(img = image,
+			image = cv2.line(img = image,
 					pt1 = ( start_x,  + y ), 
 					pt2 = ( end_x,    + y ), 
 					color=(0,255,255),
@@ -110,12 +110,11 @@ def draw_mesh_thermal(image, pixel_list):
 				thickness_text = 1
 				
 			color_text = (0,255,255)
-			cv2.putText(img = image,
+			image = cv2.putText(img = image,
 						text = str(pixel_list[ix][iy]),
 						org = (x + 5, y + 25),
 						fontFace = cv2.FONT_HERSHEY_SIMPLEX,
 						fontScale = 0.45, 
 						color = color_text,
-						thickness=thickness_text
-						)
+						thickness=thickness_text)
 	return image

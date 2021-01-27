@@ -10,7 +10,7 @@ from colour import Color
 from numpy import unravel_index
 import cv2
 import copy
-from config import *
+from conf_logging import *
 
 
 

@@ -14,9 +14,9 @@ def get_configs():
 
     # addres server
     conf.addr = {}
-    conf.addr.server = '169.254.85.183'
+    conf.addr.server =  '169.254.250.92'
     conf.addr.tcp_server = f'tcp://{conf.addr.server}:5556'
-    conf.addr.raspi = ''
+    conf.addr.raspi = '169.254.85.183'
     
     # database server
     conf.db = {}
