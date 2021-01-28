@@ -9,7 +9,7 @@ def load_image_to_screen(path_img):
     return image
 
 
-def get_configs():
+def get_configs(**kwargs):
     conf = edict()
 
     # addres server

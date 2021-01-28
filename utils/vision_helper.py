@@ -66,6 +66,9 @@ def draw_fps(image, start_time):
 	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
 	return image
 
+def draw_too_far():
+	
+
 def draw_mesh_thermal(image, pixel_list):
 	image = cv2.resize(image, (400,300))
 	mean_pix = np.mean(pixel_list)

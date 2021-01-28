@@ -29,6 +29,8 @@ from config import get_configs
 from conf_logging import setup_logger
 
 
+conf = get_configs()
+
 try:
     import RPi.GPIO as gpio
     on_RPi = True
@@ -43,7 +45,6 @@ except (ImportError, RuntimeError):
     logging.error("We are on Development mode")
 
 # global variabel
-conf = get_configs()
 conf.var.imageThermal = np.zeros((400,300,3))
 suhu = '0 C'
 ct = CentroidTracker(maxDisappeared=7)
@@ -77,7 +78,7 @@ calibration_log_main = setup_logger(name = 'calibration_main', log_file = 'calib
 
 
 class MainWindow(QMainWindow):
-    pixel_list = []
+    pixel_list = np.zeros((8,8))
 
     def __init__(self):
 

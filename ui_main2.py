@@ -6,6 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 print("ui_main2.py")
+conf = get_configs()
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -202,8 +203,7 @@ class Ui_MainWindow(object):
         self.lbl_jam.setText(_translate("MainWindow", "19:30"))
         self.lbl_tanggal.setText(_translate("MainWindow", "Fri, 29 Aug"))
         self.lbl_info_call.setText(_translate("MainWindow", "Press Call If You Not Yet Registed"))
-        self.label.setText(_translate("MainWindow", "Ruang \n"
-"Persalinan"))
+        self.label.setText(_translate("MainWindow", conf.doorlock.name))
         self.lbl_video.setText(_translate("MainWindow", "loading..."))
         self.lbl_name_recog.setText(_translate("MainWindow", "Tidak Dikenali"))
 

@@ -15,7 +15,10 @@ import json
 import time
 from time import sleep     # Import the sleep function from the time module
 import numpy as np
+
 from conf_logging import *
+from config import get_configs
+conf = get_configs()
 
 import RPi.GPIO as GPIO
 GPIO.setwarnings(False)    # Ignore warning for now
@@ -48,8 +51,8 @@ my_card = sensors.Card()
 thermalCam = sensors.CamTherm(alamat=0x69, ukuran_pix=80j, minTemp=26, maxTemp=36)
 
 #------- GET FROM SERVER
-addr_server = "tcp://11.11.11.11:5556"
-topicfilter = "pi-depan"
+addr_server = conf.addr.tcp_server
+topicfilter = conf.doorlock.topic_filter
 
 #------- connection setting
 context = zmq.Context()
