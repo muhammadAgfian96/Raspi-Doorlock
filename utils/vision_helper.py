@@ -66,8 +66,40 @@ def draw_fps(image, start_time):
 	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
 	return image
 
-def draw_too_far():
+def get_jarak(bbox):
+	raw_jarak = bbox[2]-bbox[0]
+	jarak = raw_jarak
+	if jarak > 50:
+		condition = 'jarak'
+	else:
+		condition = 'dekat'
+	return jarak, condition
+
+
+
+def draw_status(image, bbox, height_border = 75):
+	height_img, width_img, channels = image.shape
+	jarak, condition = get_jarak(bbox)
+
+	if condition == 'jauh':
+		condition_text = f'Lebih dekat. {jarak} cm'
+		color_bg = (0,0,255) # merah
+	elif condition = 'dekat':
+		condition_text = 'Berhenti. Tunggu Sebentar.'
+		color_bg = (0, 255, 0) # hijau
+
+	image = cv2.rectangle(image, (0,0), (width_img, height_border), color_bg, -1)
 	
+	image = cv2.putText(img = image, 
+						text = condition_text, 
+						org=(width_img//4, height_border-10), 
+						fontFace = cv2.FONT_HERSHEY_SIMPLEX, 
+						fontScale = 0.8, 
+						color = (255,255,255), 
+						thickness=1)
+
+	return image, condition
+
 
 def draw_mesh_thermal(image, pixel_list):
 	image = cv2.resize(image, (400,300))

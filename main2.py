@@ -28,7 +28,6 @@ import logging
 from config import get_configs
 from conf_logging import setup_logger
 
-
 conf = get_configs()
 
 try:
@@ -155,7 +154,7 @@ class MainWindow(QMainWindow):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
         global dict_suhu, obj_bbox, obj_center, koko
         kosong=False
-        # read image in BGR format
+        # 1. Read image in BGR format
         first_tick = time.time()
 
         image = self.cap.read()
@@ -164,6 +163,7 @@ class MainWindow(QMainWindow):
 
         # image = imutils.resize(image, width=400) # for face
 
+        # 2. Detect Face
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # for face
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -178,7 +178,7 @@ class MainWindow(QMainWindow):
         boxes = [[x, y, x + w, y + h] for (x, y, w, h) in rects]
         h_img, w_img, ch = image.shape
         
-        
+        # 3. Update Tracker
         obj_center, obj_bbox = ct.update(boxes)
         if len(obj_bbox.keys()) <= 0:
             kosong = True
@@ -187,6 +187,7 @@ class MainWindow(QMainWindow):
 
         # ------- Function for Doorlock --------
         if on_RPi:
+            # get face recognition from server
             list_bboxes, dict_name, isNewPeople = main_vision()
 
             if list_bboxes is not None:
@@ -197,6 +198,7 @@ class MainWindow(QMainWindow):
 
             #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
             if self.delay_face_count > 30 and self.therm_first:
+                # get thermal
                 self.therm_first = False
                 dict_suhu = {}
                 my_obj = copy.deepcopy(obj_bbox)
@@ -222,7 +224,8 @@ class MainWindow(QMainWindow):
             if dict_name is None:
                 dict_name = {}
 
-            self.count_FPS+=1
+            self.count_FPS += 1
+
 
             if len(obj_bbox.keys()) > 0:
                 #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
@@ -250,10 +253,7 @@ class MainWindow(QMainWindow):
                             main_log.info(f'[People In with Therm] {myPeople[objectID]}')
                             # self.insertDBServer(myPeople[objectID])
 
-        else:
-            pred_name='face'
-            suhu = 36.8
-        
+
         # ---- TRACKING
         if (self.count_FPS % 1 == 0) or start_time-time.time() < 3:
             obj_center, obj_bbox = ct.update(boxes)
@@ -298,6 +298,8 @@ class MainWindow(QMainWindow):
         
         if kosong:
             image = conf.doorlock.waiting_image
+        else:
+            image = draw_status(image, bbox, height_border=75)
 
         # Final to show image processing
         # get image infos
