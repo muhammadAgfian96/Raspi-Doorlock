@@ -27,6 +27,8 @@ from collections import OrderedDict
 import logging
 from config import get_configs
 from conf_logging import setup_logger
+import subprocess
+
 
 conf = get_configs()
 
@@ -298,7 +300,7 @@ class MainWindow(QMainWindow):
                 # print("in 3 : ", len(boxes))
                 continue
         
-        if !kosong and conf.debug.calibration:
+        if not kosong and conf.debug.calibration:
             image = draw_mesh_thermal(image, MainWindow.pixel_list)
             image = draw_fps(image, start_time)
         
@@ -479,6 +481,10 @@ class UIFunctions(MainWindow):
 
 
 if __name__ == "__main__":
+    subprocess.run(["v4l2-ctl", "-d", "/dev/video0", "-c", "brightness=65"])
+    subprocess.run(["v4l2-ctl", "-d", "/dev/video0", "-c", "contrast=30"])
+    subprocess.run(["v4l2-ctl", "-d", "/dev/video0", "-c", "saturation=30"])
+
     app = QApplication(sys.argv)
     window = MainWindow()
     if on_RPi:
