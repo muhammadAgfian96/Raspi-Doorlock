@@ -69,22 +69,30 @@ def draw_fps(image, start_time):
 def get_jarak(bbox):
 	raw_jarak = bbox[2]-bbox[0]
 	jarak = raw_jarak
-	if jarak > 50:
-		condition = 'jarak'
+	if jarak < 70:
+		condition = 'jauh'
 	else:
 		condition = 'dekat'
 	return jarak, condition
 
-
+def get_jarak_terdekat(bboxes):
+	jarak_terdekat = -1
+	condition_sekarang = 'jauh'
+	for bbox in bboxes:
+		jarak, condition = get_jarak(bbox)
+		if jarak > jarak_terdekat: 
+			jarak_terdekat = jarak
+			condition_sekarang = condition
+	return jarak_terdekat, condition_sekarang
 
 def draw_status(image, bbox, height_border = 75):
 	height_img, width_img, channels = image.shape
-	jarak, condition = get_jarak(bbox)
+	jarak, condition = get_jarak_terdekat(bbox)
 
 	if condition == 'jauh':
 		condition_text = f'Lebih dekat. {jarak} cm'
 		color_bg = (0,0,255) # merah
-	elif condition = 'dekat':
+	elif condition == 'dekat':
 		condition_text = 'Berhenti. Tunggu Sebentar.'
 		color_bg = (0, 255, 0) # hijau
 

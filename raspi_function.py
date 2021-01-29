@@ -18,6 +18,7 @@ import numpy as np
 
 from conf_logging import *
 from config import get_configs
+
 conf = get_configs()
 
 import RPi.GPIO as GPIO
