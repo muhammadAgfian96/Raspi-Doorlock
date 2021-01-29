@@ -185,73 +185,83 @@ class MainWindow(QMainWindow):
             self.delay_face_count = 0
             self.therm_first = True
 
-        # ------- Function for Doorlock --------
-        if on_RPi:
-            # get face recognition from server
-            list_bboxes, dict_name, isNewPeople = main_vision()
+        if kosong:
+            image = conf.doorlock.waiting_image
+        else:
+            # if any  face detected
+            image, condition = draw_status(image, bbox, height_border=75)
 
-            if list_bboxes is not None:
-                obj_center, obj_bbox = ct.update(list_bboxes)
-                
-            if len(boxes) >0:
-                self.delay_face_count +=1
+            # ------- Function for Doorlock --------
+            if condition == 'jauh':
+                print('nih klo jauh')
 
-            #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
-            if self.delay_face_count > 30 and self.therm_first:
-                # get thermal
-                self.therm_first = False
-                dict_suhu = {}
-                my_obj = copy.deepcopy(obj_bbox)
-                self.imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
-                image = self.overlayImage(image, self.imageThermal, alpha=0.7)
-                
-                # debugging for calibration
-                pixels_origin_first = copy.deepcopy(MainWindow.pixel_list)
-                pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
-                pixels_origin_first = np.rot90(pixels_origin_first, k=1)
-                current_pixel = pd.DataFrame(data=pixels_origin_first)
-                # thermal_log.info(f'''\n{current_pixel}\n''')
-                # maksimum_suhu = np.max(pixels_origin_first)
-                # calibration_log_main.info(f'{}')
+            if condition == 'deket':
+                # get face recognition: from server
+                list_bboxes, dict_name, isNewPeople = main_vision()
 
-            if self.imageThermal is None:
-                self.imageThermal = np.zeros((80,80,3))
-            
-            image = self.overlayImage(image, self.imageThermal, alpha=0.7)
-
-            if dict_suhu is None:
-                dict_suhu = {}
-            if dict_name is None:
-                dict_name = {}
-
-            self.count_FPS += 1
-
-
-            if len(obj_bbox.keys()) > 0:
-                #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                for (objectID, single_bbox) in obj_bbox.items():
-
-                    id_name = int(np.array(single_bbox).sum())
-                    if len(myPeople) == 0:
-                        myPeople[objectID] = ['no name', 'wait', (0,0)]
-
-                    if id_name in list(dict_name.keys()):
-                        single_name = dict_name[id_name]
-                        myPeople[objectID] = [single_name, 'wait', (0,0)]
-                        self.insert_list(single_name)
+                if list_bboxes is not None:
+                    obj_center, obj_bbox = ct.update(list_bboxes)
                     
-                    if len(dict_suhu) !=0 :
-                        if objectID not in list(myPeople.keys()):
-                            myPeople[objectID] = ['no data', 'wait', (0,0)]
-                        if objectID not in list(dict_suhu.keys()):
-                            myPeople[objectID] = ['no data', 'wait', (0,0)]
-                        else:
-                            coordinate = dict_suhu[objectID]['coordinate']
-                            suhu_max= dict_suhu[objectID]['max']
-                            myPeople[objectID][1] = suhu_max 
-                            myPeople[objectID][2] = coordinate
-                            main_log.info(f'[People In with Therm] {myPeople[objectID]}')
-                            # self.insertDBServer(myPeople[objectID])
+                if len(boxes) >0:
+                    self.delay_face_count +=1
+                
+                # Get Thermal 
+                #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
+                if self.delay_face_count > 60 and self.therm_first:
+                    self.therm_first = False
+                    dict_suhu = {}
+                    my_obj = copy.deepcopy(obj_bbox)
+                    self.imageThermal, thermalData, dict_suhu, MainWindow.pixel_list = thermalCam.getThermal(image, my_obj)
+                    image = self.overlayImage(image, self.imageThermal, alpha=0.7)
+                    
+                    # debugging for calibration
+                    if conf.debug.calibration:
+                        pixels_origin_first = copy.deepcopy(MainWindow.pixel_list)
+                        pixels_origin_first  = np.flip(m=pixels_origin_first, axis=1)
+                        pixels_origin_first = np.rot90(pixels_origin_first, k=1)
+                        current_pixel = pd.DataFrame(data=pixels_origin_first)
+                        # thermal_log.info(f'''\n{current_pixel}\n''')
+                        # maksimum_suhu = np.max(pixels_origin_first)
+                        # calibration_log_main.info(f'{}')
+
+                if self.imageThermal is None:
+                    self.imageThermal = np.zeros((80,80,3))
+                
+                image = self.overlayImage(image, self.imageThermal, alpha=0.7)
+
+                if dict_suhu is None:
+                    dict_suhu = {}
+                if dict_name is None:
+                    dict_name = {}
+
+                self.count_FPS += 1
+
+
+                if len(obj_bbox.keys()) > 0:
+                    #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
+                    for (objectID, single_bbox) in obj_bbox.items():
+
+                        id_name = int(np.array(single_bbox).sum())
+                        if len(myPeople) == 0:
+                            myPeople[objectID] = ['no name', 'wait', (0,0)]
+
+                        if id_name in list(dict_name.keys()):
+                            single_name = dict_name[id_name]
+                            myPeople[objectID] = [single_name, 'wait', (0,0)]
+                            self.insert_list(single_name)
+                        
+                        if len(dict_suhu) !=0 :
+                            if objectID not in list(myPeople.keys()):
+                                myPeople[objectID] = ['no data', 'wait', (0,0)]
+                            if objectID not in list(dict_suhu.keys()):
+                                myPeople[objectID] = ['no data', 'wait', (0,0)]
+                            else:
+                                coordinate = dict_suhu[objectID]['coordinate']
+                                suhu_max= dict_suhu[objectID]['max']
+                                myPeople[objectID][1] = suhu_max 
+                                myPeople[objectID][2] = coordinate
+                                main_log.info(f'[People In with Therm] {myPeople[objectID]}')
+                                # self.insertDBServer(myPeople[objectID])
 
 
         # ---- TRACKING
@@ -296,10 +306,7 @@ class MainWindow(QMainWindow):
         if conf.debug.calibration:
             image = draw_mesh_thermal(image, MainWindow.pixel_list)
         
-        if kosong:
-            image = conf.doorlock.waiting_image
-        else:
-            image = draw_status(image, bbox, height_border=75)
+
 
         # Final to show image processing
         # get image infos
