@@ -28,7 +28,7 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 	
 	# ---- label for NAME
 	ukuran_x = bbox[2]-bbox[0]
-	name = ukuran_x
+	name = str(ukuran_x)
 	#depth_1_avg = round(358 + (-7.16 * ukuran_x) + 0.0575*(ukuran_x**2) + (-0.000165*(ukuran_x**3)), 2)
 	#depth_2 = round(367 + (-7.25 * ukuran_x) + 0.0571*(ukuran_x**2) + (-0.00016*(ukuran_x**3)), 2)
 	
@@ -85,7 +85,7 @@ def get_jarak_terdekat(bboxes):
 			condition_sekarang = condition
 	return jarak_terdekat, condition_sekarang
 
-def draw_status(image, bboxes, height_border = 75):
+def draw_status(image, bboxes, height_border = 45):
 	height_img, width_img, channels = image.shape
 	jarak, condition = get_jarak_terdekat(bboxes)
 
@@ -100,7 +100,7 @@ def draw_status(image, bboxes, height_border = 75):
 	
 	image = cv2.putText(img = image, 
 						text = condition_text, 
-						org=(width_img//4, height_border-10), 
+						org=(width_img//5, height_border-10), 
 						fontFace = cv2.FONT_HERSHEY_SIMPLEX, 
 						fontScale = 0.8, 
 						color = (255,255,255), 

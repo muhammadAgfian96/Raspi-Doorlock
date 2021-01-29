@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
             if condition == 'jauh':
                 print('nih klo jauh')
 
-            if condition == 'deket':
+            if condition == 'dekat':
                 # get face recognition: from server
                 list_bboxes, dict_name, isNewPeople = main_vision()
 
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
                 
                 # Get Thermal 
                 #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
-                if self.delay_face_count > 60 and self.therm_first:
+                if self.delay_face_count > 15 and self.therm_first:
                     self.therm_first = False
                     dict_suhu = {}
                     my_obj = copy.deepcopy(obj_bbox)

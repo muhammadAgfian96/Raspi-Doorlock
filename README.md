@@ -44,7 +44,7 @@ v4l2-ctl -list-control
 
 ```powershell
 v4l2-ctl -d /dev/video0 -c focus_auto=0 
-v4l2-ctl -d /dev/video0 -c brightness=150
+v4l2-ctl -d /dev/video0 -c brightness=65
 v4l2-ctl -d /dev/video0 -c contrast=0
 v4l2-ctl -d /dev/video0 -c gain=150
 v4l2-ctl -d /dev/video0 -c sharpness=80

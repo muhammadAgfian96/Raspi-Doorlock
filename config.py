@@ -45,7 +45,7 @@ def get_configs(**kwargs):
     conf.debug = {}
     conf.debug.logging = True
     conf.debug.print = True
-    conf.debug.calibration = True
+    conf.debug.calibration = False
 
     # variabel global
     conf.var = {}
