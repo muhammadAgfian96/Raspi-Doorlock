@@ -189,7 +189,7 @@ class MainWindow(QMainWindow):
             image = conf.doorlock.waiting_image
         else:
             # if any  face detected
-            image, condition = draw_status(image, bbox, height_border=75)
+            image, condition = draw_status(image, boxes, height_border=55)
 
             # ------- Function for Doorlock --------
             if condition == 'jauh':
@@ -298,13 +298,13 @@ class MainWindow(QMainWindow):
                 # print("in 3 : ", len(boxes))
                 continue
         
-        image = draw_fps(image, start_time)
+        if !kosong and conf.debug.calibration:
+            image = draw_mesh_thermal(image, MainWindow.pixel_list)
+            image = draw_fps(image, start_time)
         
         if self.count_FPS == 70:
             self.count_FPS = 0
 
-        if conf.debug.calibration:
-            image = draw_mesh_thermal(image, MainWindow.pixel_list)
         
 
 

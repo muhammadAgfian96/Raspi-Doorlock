@@ -85,13 +85,13 @@ def get_jarak_terdekat(bboxes):
 			condition_sekarang = condition
 	return jarak_terdekat, condition_sekarang
 
-def draw_status(image, bbox, height_border = 75):
+def draw_status(image, bboxes, height_border = 75):
 	height_img, width_img, channels = image.shape
-	jarak, condition = get_jarak_terdekat(bbox)
+	jarak, condition = get_jarak_terdekat(bboxes)
 
 	if condition == 'jauh':
 		condition_text = f'Lebih dekat. {jarak} cm'
-		color_bg = (0,0,255) # merah
+		color_bg = (255,0,0) # merah
 	elif condition == 'dekat':
 		condition_text = 'Berhenti. Tunggu Sebentar.'
 		color_bg = (0, 255, 0) # hijau
@@ -104,7 +104,7 @@ def draw_status(image, bbox, height_border = 75):
 						fontFace = cv2.FONT_HERSHEY_SIMPLEX, 
 						fontScale = 0.8, 
 						color = (255,255,255), 
-						thickness=1)
+						thickness=2)
 
 	return image, condition
 
