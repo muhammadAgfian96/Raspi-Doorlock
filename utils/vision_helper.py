@@ -63,7 +63,7 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 
 def draw_fps(image, start_time):
 	FPS =  1/ (time.time()-start_time)     
-	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 2)
+	image = cv2.putText(image, "FPS: {:.2f}".format(FPS), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 0, 0), 2)
 	return image
 
 def get_jarak(bbox):
@@ -85,7 +85,7 @@ def get_jarak_terdekat(bboxes):
 			condition_sekarang = condition
 	return jarak_terdekat, condition_sekarang
 
-def draw_status(image, bboxes, height_border = 45):
+def draw_status(image, bboxes, height_border = 35):
 	height_img, width_img, channels = image.shape
 	jarak, condition = get_jarak_terdekat(bboxes)
 
@@ -100,9 +100,9 @@ def draw_status(image, bboxes, height_border = 45):
 	
 	image = cv2.putText(img = image, 
 						text = condition_text, 
-						org=(width_img//5, height_border-10), 
+						org=(width_img//6, height_border-6), 
 						fontFace = cv2.FONT_HERSHEY_SIMPLEX, 
-						fontScale = 0.8, 
+						fontScale = 0.65, 
 						color = (255,255,255), 
 						thickness=2)
 

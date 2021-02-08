@@ -17,7 +17,13 @@ def get_configs(**kwargs):
     conf.addr.server =  '169.254.250.92'
     conf.addr.tcp_server = f'tcp://{conf.addr.server}:5556'
     conf.addr.raspi = '169.254.85.183'
-    
+
+    # zmq handler
+    conf.zmq = {}
+    conf.zmq.REQUEST_TIMEOUT = 5000
+    conf.zmq.REQUEST_RETRIES = 3
+    conf.zmq.SERVER_ENDPOINT = conf.addr.tcp_server
+
     # database server
     conf.db = {}
     conf.db.host = conf.addr.server

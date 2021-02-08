@@ -127,6 +127,7 @@ def rcvMsgJSON():
     return data.names, data.bboxes
     
 
+
 def main_vision():
     # no received handle, so program can running and not stuck using zmq.NOBLOCK
     global open_status_face, open_status_button, open_status_RFID, open_status_sJarak

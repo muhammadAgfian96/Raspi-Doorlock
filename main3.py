@@ -30,6 +30,8 @@ from conf_logging import setup_logger
 import subprocess
 
 
+from modules.zmq_handler import waiting_reply, send_request
+
 conf = get_configs()
 
 try:
@@ -119,7 +121,7 @@ class MainWindow(QMainWindow):
         self.count_FPS = 0
         self.delay_face_count = 0
         self.therm_first = True
-        self.imageThermal = None
+        self.imageThermal = np.zeros((80,80,3)).astype(np.int8)
 
         # set database and get conf from database
         self.database_do = DatabaseHelper(host = conf.db.host, 
@@ -154,7 +156,8 @@ class MainWindow(QMainWindow):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
         global dict_suhu, obj_bbox, obj_center, koko
         kosong=False
-        
+        self.count_FPS += 1
+
         # 1. Read image in BGR format
         first_tick = time.time()
 
@@ -189,7 +192,7 @@ class MainWindow(QMainWindow):
         if kosong:
             image = conf.doorlock.waiting_image
         else:
-            # if any  face detected
+            # Ther is Face
             image, condition = draw_status(image, boxes, height_border=47)
 
             # ------- Function for Doorlock --------
@@ -197,18 +200,21 @@ class MainWindow(QMainWindow):
                 print('nih klo jauh')
 
             if condition == 'dekat':
-                # get face recognition: from server
-                list_bboxes, dict_name, isNewPeople = main_vision()
-
-                if list_bboxes is not None:
-                    obj_center, obj_bbox = ct.update(list_bboxes)
-                    
                 if len(boxes) >0:
                     self.delay_face_count +=1
                 
-                # Get Thermal 
-                #if self.count_FPS % 7 == 0 or self.isThereNewObject(myPeople, obj_bbox) or isNewPeople:
-                if self.delay_face_count > 10 and self.therm_first:
+                # Face recognition and Get Thermal Reading
+                if self.delay_face_count > 5 and self.therm_first and len(boxes) >0:
+
+                    # 1. Send To Server To Get Result Face Recognition-------
+                    prepared_data = {'bbox' : boxes}
+                    send_request(topic='pi-depan', data=prepared_data)
+                    list_bboxes, dict_name = waiting_reply()
+
+                    if list_bboxes is not None:
+                        obj_center, obj_bbox = ct.update(list_bboxes)
+
+                    # 2. Get Suhu Thermal-----------------------------
                     self.therm_first = False
                     dict_suhu = {}
                     my_obj = copy.deepcopy(obj_bbox)
@@ -225,44 +231,11 @@ class MainWindow(QMainWindow):
                         # maksimum_suhu = np.max(pixels_origin_first)
                         # calibration_log_main.info(f'{}')
 
-                if self.imageThermal is None:
-                    self.imageThermal = np.zeros((80,80,3))
-                
+
                 image = self.overlayImage(image, self.imageThermal, alpha=0.7)
 
-                if dict_suhu is None:
-                    dict_suhu = {}
-                if dict_name is None:
-                    dict_name = {}
-
-                self.count_FPS += 1
-
-
-                if len(obj_bbox.keys()) > 0:
-                    #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
-                    for (objectID, single_bbox) in obj_bbox.items():
-
-                        id_name = int(np.array(single_bbox).sum())
-                        if len(myPeople) == 0:
-                            myPeople[objectID] = ['no name', 'wait', (0,0)]
-
-                        if id_name in list(dict_name.keys()):
-                            single_name = dict_name[id_name]
-                            myPeople[objectID] = [single_name, 'wait', (0,0)]
-                            self.insert_list(single_name)
-                        
-                        if len(dict_suhu) !=0 :
-                            if objectID not in list(myPeople.keys()):
-                                myPeople[objectID] = ['no data', 'wait', (0,0)]
-                            if objectID not in list(dict_suhu.keys()):
-                                myPeople[objectID] = ['no data', 'wait', (0,0)]
-                            else:
-                                coordinate = dict_suhu[objectID]['coordinate']
-                                suhu_max= dict_suhu[objectID]['max']
-                                myPeople[objectID][1] = suhu_max 
-                                myPeople[objectID][2] = coordinate
-                                main_log.info(f'[People In with Therm] {myPeople[objectID]}')
-                                # self.insertDBServer(myPeople[objectID])
+                # update dict
+                myPeople = self._update_myPeople(self, obj_bbox, myPeople, dict_suhu, dict_name)
 
 
         # ---- TRACKING
@@ -270,10 +243,28 @@ class MainWindow(QMainWindow):
             obj_center, obj_bbox = ct.update(boxes)
             self.deleteExpireObject(myPeople, obj_center)
 
-
-        too_far_value = -1
-        
         # draw bbox
+        self._drawNames(obj_center, obj_bbox, myPeople)
+        
+        if not kosong and conf.debug.calibration:
+            image = draw_mesh_thermal(image, MainWindow.pixel_list)
+            image = draw_fps(image, start_time)
+        
+        if self.count_FPS == 70:
+            self.count_FPS = 0
+
+        # Final to show image processing
+        # get image infos
+        height, width, channel = image.shape
+        step = channel * width
+        # create QImage from image
+        qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
+        # show image in img_label
+        self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
+
+    # Helpers For Drawing --------------------------------
+    def _drawNames(self, obj_center, obj_bbox, myPeople):
+        too_far_value = -1
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             # print("test", myPeople, objectID)
 
@@ -298,29 +289,37 @@ class MainWindow(QMainWindow):
                               suhu=suhu)
             else:
                 # print("in 3 : ", len(boxes))
-                continue
-        
-        if not kosong and conf.debug.calibration:
-            image = draw_mesh_thermal(image, MainWindow.pixel_list)
-            image = draw_fps(image, start_time)
-        
-        if self.count_FPS == 70:
-            self.count_FPS = 0
-
-        
-
-
-        # Final to show image processing
-        # get image infos
-        height, width, channel = image.shape
-        step = channel * width
-        # create QImage from image
-        qImg = QImage(image.data, width, height, step, QImage.Format_RGB888)
-        # show image in img_label
-        self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
-
+                continue 
 
     # Helpers For Tracking ----------
+    def _update_myPeople(self, obj_bbox, myPeople, dict_suhu, dict_name):
+        if len(obj_bbox.keys()) > 0:
+            #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
+            for (objectID, single_bbox) in obj_bbox.items():
+
+                id_name = int(np.array(single_bbox).sum())
+                if len(myPeople) == 0:
+                    myPeople[objectID] = ['no name', 'wait', (0,0)]
+
+                if id_name in list(dict_name.keys()):
+                    single_name = dict_name[id_name]
+                    myPeople[objectID] = [single_name, 'wait', (0,0)]
+                    self.insert_list(single_name)
+                
+                if len(dict_suhu) !=0 :
+                    if objectID not in list(myPeople.keys()):
+                        myPeople[objectID] = ['no data', 'wait', (0,0)]
+                    if objectID not in list(dict_suhu.keys()):
+                        myPeople[objectID] = ['no data', 'wait', (0,0)]
+                    else:
+                        coordinate = dict_suhu[objectID]['coordinate']
+                        suhu_max= dict_suhu[objectID]['max']
+                        myPeople[objectID][1] = suhu_max 
+                        myPeople[objectID][2] = coordinate
+                        main_log.info(f'[People In with Therm] {myPeople[objectID]}')
+                        # self.insertDBServer(myPeople[objectID])
+        return myPeople
+
     def getNewObject(self, myObj, trackingObj):
         futureObject = set(trackingObj.keys()).difference(myObj.keys())
         for i in futureObject:
@@ -370,8 +369,6 @@ class MainWindow(QMainWindow):
                                    )
 
         return basicImage
-
-
 
     # another processing 
     def processing_sensors(self):
