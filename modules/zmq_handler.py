@@ -20,9 +20,9 @@ from config import get_configs
 conf = get_configs()
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
-conf.zmq.REQUEST_TIMEOUT = 5000
-conf.zmq.REQUEST_RETRIES = 3
-conf.zmq.SERVER_ENDPOINT = "tcp://localhost:5555"
+# conf.zmq.REQUEST_TIMEOUT = 5000
+# conf.zmq.REQUEST_RETRIES = 3
+# conf.zmq.SERVER_ENDPOINT = "tcp://localhost:5555"
 
 context = zmq.Context()
 
@@ -39,6 +39,7 @@ def send_request(data = {}, topic='0'):
             'id' : ***
         }
     '''
+    global client
     my_data = {
             'device_id': topic,
             'data': data,
@@ -78,6 +79,7 @@ def waiting_reply():
         }
 
     '''
+    global client, conf
     retries_left = conf.zmq.REQUEST_RETRIES
     reply = {}
 

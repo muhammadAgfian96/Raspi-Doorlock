@@ -57,18 +57,18 @@ addr_server = conf.addr.tcp_server
 topicfilter = conf.doorlock.topic_filter
 
 #------- connection setting
-context = zmq.Context()
+# context = zmq.Context()
 #  Socket to talk to server
-print("Connecting to server…")
+# print("Connecting to server…")
 #socket = context.socket(zmq.REQ)
-socket = context.socket(zmq.SUB)
+# socket = context.socket(zmq.SUB)
 
-socket.connect(addr_server) #change this to ip-server
-socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter, encoding='utf-8')
+# socket.connect(addr_server) #change this to ip-server
+# socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter, encoding='utf-8')
 # KeepAlive when connection unstable
-socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
-socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
-socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
+# socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
+# socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
+# socket.setsockopt(zmq.TCP_KEEPALIVE_INTVL, 300)
 
 #------- state
 open_status_face = False
