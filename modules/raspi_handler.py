@@ -4,7 +4,7 @@
 # https://stackoverflow.com/questions/26012132/zero-mq-socket-recv-call-is-blocking
 # -----
 import sys
-sys.path.append('../')
+sys.path.append('modules')
 print('raspi_function')
 from datetime import datetime
 import zmq

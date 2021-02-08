@@ -235,7 +235,8 @@ class MainWindow(QMainWindow):
                 image = self.overlayImage(image, self.imageThermal, alpha=0.7)
 
                 # update dict
-                myPeople = self._update_myPeople(self, obj_bbox, myPeople, dict_suhu, dict_name)
+                myPeople = self._update_myPeople(obj_bbox=obj_bbox, myPeople=myPeople, 
+                                                dict_suhu=dict_suhu, dict_name=dict_name)
 
 
         # ---- TRACKING

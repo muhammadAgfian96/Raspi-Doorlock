@@ -7,7 +7,7 @@
 #
 # https://zguide.zeromq.org/docs/chapter4/
 import sys
-sys.path.append('../') 
+sys.path.append('modules')
 import itertools
 import logging
 import sys
