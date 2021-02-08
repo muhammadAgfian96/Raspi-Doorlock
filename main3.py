@@ -245,7 +245,8 @@ class MainWindow(QMainWindow):
             self.deleteExpireObject(myPeople, obj_center)
 
         # draw bbox
-        self._drawNames(obj_center, obj_bbox, myPeople)
+        self._drawNames(boxes=boxes, obj_center=obj_center, 
+                        obj_bbox=obj_bbox, myPeople=myPeople)
         
         if not kosong and conf.debug.calibration:
             image = draw_mesh_thermal(image, MainWindow.pixel_list)
@@ -264,7 +265,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
 
     # Helpers For Drawing --------------------------------
-    def _drawNames(self, obj_center, obj_bbox, myPeople):
+    def _drawNames(self, boxes, obj_center, obj_bbox, myPeople):
         too_far_value = -1
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             # print("test", myPeople, objectID)
