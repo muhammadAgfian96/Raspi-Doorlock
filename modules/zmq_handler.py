@@ -49,7 +49,7 @@ def send_request(data = {}, topic='0'):
     client.send(request)
 
 
-def processingReply(replay):
+def processingReply(reply):
     dict_name = {}
     list_pred_name, list_bboxes = reply['names'], reply['bboxes']
     for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
@@ -89,7 +89,7 @@ def waiting_reply():
             reply = ast.literal_eval(reply.decode('utf-8'))
             list_bboxes, dict_name = processingReply(reply)
             # print("[REPLY]",reply, type(reply))
-            # logging.info("Server replied OK (%s)", reply)
+            logging.info("Server replied OK (%s)", reply)
             return list_bboxes, dict_name
 
         retries_left -= 1
