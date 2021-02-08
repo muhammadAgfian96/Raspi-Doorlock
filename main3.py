@@ -57,7 +57,7 @@ myPeople = OrderedDict()
 
 obj_center = {}
 obj_bbox = {}
-dict_suhu = {}
+dict_suhu = dict_name = {}
 
 main_log = setup_logger(name = 'main_logs', log_file = 'main_logs', 
                         folder_name='main_logs', level = logging.DEBUG,
@@ -154,7 +154,7 @@ class MainWindow(QMainWindow):
 
     def stream_camera_on(self):
         global imageThermal, suhu, ct, myPeople, getData, futureObj
-        global dict_suhu, obj_bbox, obj_center, koko
+        global dict_name, dict_suhu, obj_bbox, obj_center, koko
         kosong=False
         self.count_FPS += 1
 
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
             self.deleteExpireObject(myPeople, obj_center)
 
         # draw bbox
-        self._drawNames(boxes=boxes, obj_center=obj_center, 
+        self._drawNames(image=image, boxes=boxes, obj_center=obj_center, 
                         obj_bbox=obj_bbox, myPeople=myPeople)
         
         if not kosong and conf.debug.calibration:
@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_video.setPixmap(QPixmap.fromImage(qImg))
 
     # Helpers For Drawing --------------------------------
-    def _drawNames(self, boxes, obj_center, obj_bbox, myPeople):
+    def _drawNames(self, image, boxes, obj_center, obj_bbox, myPeople):
         too_far_value = -1
         for (objectID, centroid), single_bbox in zip(obj_center.items(), obj_bbox.values()):
             # print("test", myPeople, objectID)
