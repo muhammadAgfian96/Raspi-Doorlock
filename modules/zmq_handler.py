@@ -29,7 +29,8 @@ class ZMQ_handler:
         self.client.connect(self.conf.zmq.SERVER_ENDPOINT)
         self.retries_left = self.conf.zmq.REQUEST_RETRIES
         self.hasReceive = False
-
+        self.hasSend = False
+        
     def send_request(self, data = {}, topic='0'):
         '''
         this is receive just one face
