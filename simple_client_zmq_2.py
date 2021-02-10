@@ -16,7 +16,7 @@ import time
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
-REQUEST_TIMEOUT = 5000
+REQUEST_TIMEOUT = 3000
 REQUEST_RETRIES = 3
 SERVER_ENDPOINT = "tcp://localhost:5555"
 
@@ -26,50 +26,68 @@ logging.info("Connecting to server…")
 client = context.socket(zmq.REQ)
 client.connect(SERVER_ENDPOINT)
 
-
+request = None
 def send_req(client):
+    global request
     my_data = {
             'device_id': "0",
             'hello': "1 ini dari raspi-1"
         }
     request = str(my_data).encode()
-    logging.info("Sending (%s)", request)
+    logging.info("[SENDING] (%s)", request)
     client.send(request)
 
-def waiting_reply(client):
-
+def waiting_reply(client, hasSend):
+    global request
     retries_left = REQUEST_RETRIES
+    hasReceive = False
     reply = {}
-    while True:
-        if (client.poll(REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
-            reply = client.recv(flags=zmq.NOBLOCK)
-            reply = ast.literal_eval(reply.decode('utf-8'))
-            print("[REPLY]",reply, type(reply))
-            logging.info("Server replied OK (%s)", reply)
-            break
+
+    print('process...')
+
+    try:
+        reply = client.recv(flags=zmq.NOBLOCK)
         
-        print('heheh works')
-        retries_left -= 1
-        logging.warning("No response from server")
+        reply = ast.literal_eval(reply.decode('utf-8'))
+        print("[REPLY]",reply, type(reply))
+        logging.info("Server replied OK (%s)", reply)
+        # continue
+        hasSend = False
+        hasReceive = True
+    except:
+    # else:
+        print('no reply')
+    #     client.setsockopt(zmq.LINGER, 0)
+    #     client.close()
+        
+        if hasReceive:
+            hasSend = True
+        break
+    # print('heheh works')
+    # retries_left -= 1
+    # logging.warning("No response from server")
 
-        # Socket is confused. Close and remove it.
-        client.setsockopt(zmq.LINGER, 0)
-        client.close()
-        if retries_left == 0:
-            logging.error("Server seems to be offline, abandoning")
-            sys.exit()
+    # Socket is confused. Close and remove it.
+    # if retries_left == 0:
+    #     logging.error("Server seems to be offline, abandoning")
+    #     retries_left = 3
+    #     continue
 
-        logging.info("Reconnecting to server…")
-        # Create new connection
-        client = context.socket(zmq.REQ)
-        client.connect(SERVER_ENDPOINT)
-        logging.info("Resending (%s)", request)
-        client.send(request)
-    return reply
+    # logging.info("Reconnecting to server…")
+    # # Create new connection
+    # client = context.socket(zmq.REQ)
+    # client.connect(SERVER_ENDPOINT)
+    # logging.info("Resending (%s)", request)
+    # client.send(request)
+    return reply, hasSend, hasReceive
 
-
+hasSend = False
 for sequence in itertools.count():
+    print('wait 2 seconds...', hasSend)
     time.sleep(2)
-    send_req(client)
-    reply = waiting_reply(client)
-    logging.info("[LUAR] Server replied OK (%s)", reply)
+
+    if not hasSend:
+        send_req(client)
+        hasSend = True
+    reply = waiting_reply(client,hasSend)
+    # logging.info("[LUAR] Server replied OK (%s)", reply)

@@ -17,103 +17,114 @@ import time
 import raspi_handler as rpi
 from config import get_configs
 
-conf = get_configs()
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
-# conf.zmq.REQUEST_TIMEOUT = 5000
-# conf.zmq.REQUEST_RETRIES = 3
-# conf.zmq.SERVER_ENDPOINT = "tcp://localhost:5555"
 
-context = zmq.Context()
+class ZMQ_handler:
+    def __init__(self):
+        self.conf = get_configs()
+        self.context = zmq.Context()
+        logging.info("Connecting to server…")
+        self.client = self.context.socket(zmq.REQ)
+        self.client.connect(self.conf.zmq.SERVER_ENDPOINT)
+        self.retries_left = self.conf.zmq.REQUEST_RETRIES
+        self.hasReceive = False
 
-logging.info("Connecting to server…")
-client = context.socket(zmq.REQ)
-client.connect(conf.zmq.SERVER_ENDPOINT)
+    def send_request(self, data = {}, topic='0'):
+        '''
+        this is receive just one face
+        data = {
+                'bbox': [],
+                'id' : ***
+            }
+        '''
+        if self.hasSend: 
+            # jika sudah dikirim...
+            
+            pass
+        else: 
+            # jika belum dikirim
+            self.my_data = {
+                    'device_id': topic,
+                    'data': data,
+                }
+            self.request = str(self.my_data).encode()
+            logging.info("Sending (%s)", self.request)
+            self.client.send(request)
+            self.hasSend = True
+            self.hasReceive = False
+
+    def processingReply(self, reply):
+        dict_name = {}
+        list_pred_name, list_bboxes = reply['names'], reply['bboxes']
+        for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
+                id_name = int(np.array(single_bbox).sum())
+
+                if regonized_name.lower() == "unknown":
+                    #socket.send(b"High")
+                    print("Unknown, Not Open")
+                    rpi.open_status_face = False
+                elif regonized_name.lower() != "unknown":
+                    rpi.open_status_face = True
+                    dict_name[id_name] = regonized_name
+        
+        rpi.main_output()
+        return list_bboxes, dict_name
 
 
-def send_request(data = {}, topic='0'):
-    '''
-    this is receive just one face
-    data = {
-            'bbox': [],
-            'id' : ***
-        }
-    '''
-    global client
-    my_data = {
-            'device_id': topic,
-            'data': data,
-        }
-    request = str(my_data).encode()
-    logging.info("Sending (%s)", request)
-    client.send(request)
+    def waiting_reply():
+        '''
+        @return:
+            - replay = {
+                "topic": str(self.topic),
+                "bboxes" : [[bbox1], [bbox2], ... , [bbox3]],
+                "names" : [[name1], [name2], ... ,[name3]],
+                "acc"  : [[acc1], [acc2], ... ,[acc3]],
+                "time" : now
+            }
 
-
-def processingReply(reply):
-    dict_name = {}
-    list_pred_name, list_bboxes = reply['names'], reply['bboxes']
-    for regonized_name, single_bbox in zip(list_pred_name, list_bboxes):
-            id_name = int(np.array(single_bbox).sum())
-
-            if regonized_name.lower() == "unknown":
-                #socket.send(b"High")
-                print("Unknown, Not Open")
-                rpi.open_status_face = False
-            elif regonized_name.lower() != "unknown":
-                rpi.open_status_face = True
-                dict_name[id_name] = regonized_name
-    
-    rpi.main_output()
-    return list_bboxes, dict_name
-
-
-def waiting_reply():
-    '''
-    @return:
-        - replay = {
-            "topic": str(self.topic),
-            "bboxes" : [[bbox1], [bbox2], ... , [bbox3]],
-            "names" : [[name1], [name2], ... ,[name3]],
-            "acc"  : [[acc1], [acc2], ... ,[acc3]],
-            "time" : now
-        }
-
-    '''
-    global client, conf
-    retries_left = conf.zmq.REQUEST_RETRIES
-    reply = {}
-
-    while True:
-        if (client.poll(conf.zmq.REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
-            reply = client.recv(flags=zmq.NOBLOCK)
+        '''
+        reply = {}
+        list_bboxes, dict_name = [], {}
+        self.hasReceive = False
+        # if (self.client.poll(self.conf.zmq.REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
+        try:
+            reply = self.client.recv(flags=zmq.NOBLOCK)
             reply = ast.literal_eval(reply.decode('utf-8'))
-            list_bboxes, dict_name = processingReply(reply)
-            # print("[REPLY]",reply, type(reply))
+            list_bboxes, dict_name = self.processingReply(reply)
             logging.info("Server replied OK (%s)", reply)
-            return list_bboxes, dict_name
-
-        retries_left -= 1
-        logging.warning("No response from server")
-
-        # Socket is confused. Close and remove it.
-        client.setsockopt(zmq.LINGER, 0)
-        client.close()
-        if retries_left == 0:
-            logging.error("Server seems to be offline, abandoning")
-            sys.exit()
-
-        logging.info("Reconnecting to server…")
-        # Create new connection
-        client = context.socket(zmq.REQ)
-        client.connect(conf.zmq.SERVER_ENDPOINT)
-        logging.info("Resending (%s)", request)
-        client.send(request)
-
-    return [], {}
+            self.hasReceive = True
+            self.hasSend = False
+            self.request = None
+        except:
+            self.hasReceive = False
+            if self.hasSend:
+                self.retries_left -= 1
+                logging.warning("No response from server")
 
 
-# for sequence in itertools.count():
-#     time.sleep(2)
-#     send_req(client)
-#     reply = waiting_reply(client)
-#     logging.info("[LUAR] Server replied OK (%s)", reply)
+        return list_bboxes, dict_name
+
+
+    def reconnecting(self):
+        self.hasReceive = False
+        self.hasSend = False
+
+        if self.retries_left < 0:
+            self.retries_left = 0
+        
+        if self.request is not None and self.hasReceive == False and self.retries_left == 0:
+
+            # Socket is self.confused. Close and remove it.
+            self.client.setsockopt(zmq.LINGER, 0)
+            self.client.close()
+
+            logging.info("Reconnecting to server…")
+            # Create new connection
+            self.client = context.socket(zmq.REQ)
+            self.client.connect(self.conf.zmq.SERVER_ENDPOINT)
+            logging.info("Resending (%s)", self.request)
+            self.client.send(self.request)
+
+            self.retries_left = self.conf.zmq.REQUEST_RETRIES
+

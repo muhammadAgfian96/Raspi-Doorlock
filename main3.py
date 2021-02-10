@@ -30,7 +30,7 @@ from conf_logging import setup_logger
 import subprocess
 
 
-from modules.zmq_handler import waiting_reply, send_request
+from modules.zmq_handler import ZMQ_handler
 
 conf = get_configs()
 
@@ -105,6 +105,9 @@ class MainWindow(QMainWindow):
         self.streamCamera = QTimer()
         self.streamCamera.start(20)
         self.streamCamera.timeout.connect(self.stream_camera_on)
+        self.hasSendRequest = False
+        self.hasReceiveReplay = False
+        self.zmq = ZMQ_handler()
 
         # for input operation
         self.streamSensors = QTimer()
@@ -208,8 +211,16 @@ class MainWindow(QMainWindow):
 
                     # 1. Send To Server To Get Result Face Recognition-------
                     prepared_data = {'bbox' : boxes}
-                    send_request(topic='pi-depan', data=prepared_data)
-                    list_bboxes, dict_name = waiting_reply()
+                    self.zmq.send_request(data=prepared_data, topic='pi-depan')
+                    list_bboxes, dict_name = self.zmq.waiting_reply()
+                    self.zmq.reconnecting()
+
+                    # if self.hasSendRequest and self.hasReceiveReplay:
+                    #     list_bboxes, dict_name, self.hasReceiveReplay = waiting_reply()
+                    
+                    # else:
+                    #     send_request(topic='pi-depan', data=prepared_data)
+                    #     self.hasSendRequest = True
 
                     if list_bboxes is not None:
                         obj_center, obj_bbox = ct.update(list_bboxes)
