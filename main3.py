@@ -215,12 +215,6 @@ class MainWindow(QMainWindow):
                     list_bboxes, dict_name = self.zmq.waiting_reply()
                     self.zmq.reconnecting()
 
-                    # if self.hasSendRequest and self.hasReceiveReplay:
-                    #     list_bboxes, dict_name, self.hasReceiveReplay = waiting_reply()
-                    
-                    # else:
-                    #     send_request(topic='pi-depan', data=prepared_data)
-                    #     self.hasSendRequest = True
 
                     if list_bboxes is not None:
                         obj_center, obj_bbox = ct.update(list_bboxes)

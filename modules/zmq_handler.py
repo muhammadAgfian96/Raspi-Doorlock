@@ -31,7 +31,7 @@ class ZMQ_handler:
         self.hasReceive = False
         self.hasSend = False
 
-    def send_request(self, data = {}, topic='0'):
+    def send_request(self, data = {}, topic=''):
         '''
         this is receive just one face
         data = {
@@ -41,8 +41,7 @@ class ZMQ_handler:
         '''
         if self.hasSend: 
             # jika sudah dikirim...
-            
-            pass
+            print('sudah dikirim')
         else: 
             # jika belum dikirim
             self.my_data = {
@@ -50,8 +49,8 @@ class ZMQ_handler:
                     'data': data,
                 }
             self.request = str(self.my_data).encode()
-            logging.info("Sending (%s)", self.request)
             self.client.send(self.request)
+            logging.info("Sending (%s)", self.request)
             self.hasSend = True
             self.hasReceive = False
 
@@ -108,11 +107,11 @@ class ZMQ_handler:
 
 
     def reconnecting(self):
-        self.hasReceive = False
-        self.hasSend = False
 
         if self.retries_left < 0:
             self.retries_left = 0
+            self.hasReceive = False
+            self.hasSend = False
         
         if self.request is not None and self.hasReceive == False and self.retries_left == 0:
 
