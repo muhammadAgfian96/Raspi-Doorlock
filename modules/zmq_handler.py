@@ -30,7 +30,7 @@ class ZMQ_handler:
         self.retries_left = self.conf.zmq.REQUEST_RETRIES
         self.hasReceive = False
         self.hasSend = False
-        
+
     def send_request(self, data = {}, topic='0'):
         '''
         this is receive just one face
@@ -51,7 +51,7 @@ class ZMQ_handler:
                 }
             self.request = str(self.my_data).encode()
             logging.info("Sending (%s)", self.request)
-            self.client.send(request)
+            self.client.send(self.request)
             self.hasSend = True
             self.hasReceive = False
 
