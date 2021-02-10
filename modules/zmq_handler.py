@@ -73,7 +73,7 @@ class ZMQ_handler:
         return list_bboxes, dict_name
 
 
-    def waiting_reply():
+    def waiting_reply(self):
         '''
         @return:
             - replay = {
