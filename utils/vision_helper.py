@@ -28,7 +28,7 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 	
 	# ---- label for NAME
 	ukuran_x = bbox[2]-bbox[0]
-	name = str(ukuran_x)
+	# name = str(ukuran_x)
 	#depth_1_avg = round(358 + (-7.16 * ukuran_x) + 0.0575*(ukuran_x**2) + (-0.000165*(ukuran_x**3)), 2)
 	#depth_2 = round(367 + (-7.25 * ukuran_x) + 0.0571*(ukuran_x**2) + (-0.00016*(ukuran_x**3)), 2)
 	
@@ -41,7 +41,7 @@ def draw_box_name(bbox, name, frame, suhu='ERR', threshold_suhu=38.0):
 							(bbox[0]+baseline[0], top+2),
 							color_bbox, -1)	
 	
-	frame = cv2.putText(frame, f"{ukuran_x}",
+	frame = cv2.putText(frame, name,
 						(bbox[0]+3, top),
 						cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_text, 1,
 						cv2.LINE_AA)
