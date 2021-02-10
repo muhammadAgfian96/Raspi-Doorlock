@@ -121,7 +121,7 @@ class ZMQ_handler:
 
             logging.info("Reconnecting to server…")
             # Create new connection
-            self.client = context.socket(zmq.REQ)
+            self.client = self.context.socket(zmq.REQ)
             self.client.connect(self.conf.zmq.SERVER_ENDPOINT)
             logging.info("Resending (%s)", self.request)
             self.client.send(self.request)
