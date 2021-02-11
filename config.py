@@ -45,8 +45,8 @@ def get_configs(**kwargs):
     conf.doorlock.months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
                             'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
                             'Nov', 'Dec']
-    # conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
-    # conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
+    conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
+    conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
 
     # debugging
     conf.debug = {}

@@ -15,7 +15,7 @@ import sys
 import zmq
 import ast
 import time
-# import raspi_handler as rpi
+import raspi_handler as rpi
 from config import get_configs
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
@@ -91,7 +91,7 @@ class ZMQ_handler:
             # if (self.client.poll(self.conf.zmq.REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
             reply = self.client.recv(flags=zmq.NOBLOCK)
             reply = ast.literal_eval(reply.decode('utf-8'))
-            # list_bboxes, dict_name = self.processingReply(reply)
+            list_bboxes, dict_name = self.processingReply(reply)
             logging.info("Server replied OK (%s)", reply)
             self.hasReceive = True
             self.hasSend = False
