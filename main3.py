@@ -196,22 +196,30 @@ class MainWindow(QMainWindow):
             image = conf.doorlock.waiting_image
         else:
             # Ther is Face
-            image, condition = draw_status(image, boxes, height_border=47)
+            image, condition = draw_status(image, boxes, height_border=35)
 
             # ------- Function for Doorlock --------
             if condition == 'jauh':
                 print('nih klo jauh')
 
-            if condition == 'dekat':
+            elif condition == 'dekat':
+                isNeedToSend = False
                 if len(boxes) >0:
                     self.delay_face_count +=1
                 
                 # Face recognition and Get Thermal Reading
-                if self.delay_face_count > 5 and self.therm_first and len(boxes) >0:
+                if self.delay_face_count > 10 and self.therm_first and len(boxes) >0:
 
                     # 1. Send To Server To Get Result Face Recognition-------
-                    prepared_data = {'bbox' : boxes}
-                    self.zmq.send_request(data=prepared_data, topic='pi-depan')
+                    # if len(myPeople.keys()) > 0:
+                    for objectID in  obj_center.keys():
+                        if objectID not in myPeople.keys():
+                            isNeedToSend = True
+
+                    if isNeedToSend:
+                        prepared_data = {'bbox' : boxes}
+                        self.zmq.send_request(data=prepared_data, topic='pi-depan')
+
                     list_bboxes, dict_name = self.zmq.waiting_reply()
                     self.zmq.reconnecting()
 
@@ -300,24 +308,32 @@ class MainWindow(QMainWindow):
 
     # Helpers For Tracking ----------
     def _update_myPeople(self, obj_bbox, myPeople, dict_suhu, dict_name):
+        '''
+            myPeople = {
+                objectID : [nama, suhu, coordinate],
+                objectID : [nama, suhu, coordinate],
+                ...
+                objectID : [nama, suhu, coordinate],
+            }
+        '''
         if len(obj_bbox.keys()) > 0:
             #obj_center, obj_bbox = ct.update(list_bboxes) # ---- TRACKING update
             for (objectID, single_bbox) in obj_bbox.items():
 
                 id_name = int(np.array(single_bbox).sum())
                 if len(myPeople) == 0:
-                    myPeople[objectID] = ['no name', 'wait', (0,0)]
+                    myPeople[objectID] = ['unknown', '... C', (0,0)]
 
                 if id_name in list(dict_name.keys()):
                     single_name = dict_name[id_name]
-                    myPeople[objectID] = [single_name, 'wait', (0,0)]
+                    myPeople[objectID] = [single_name, '... C', (0,0)]
                     self.insert_list(single_name)
                 
                 if len(dict_suhu) !=0 :
                     if objectID not in list(myPeople.keys()):
-                        myPeople[objectID] = ['no data', 'wait', (0,0)]
+                        myPeople[objectID] = ['unknown!', '... C', (0,0)]
                     if objectID not in list(dict_suhu.keys()):
-                        myPeople[objectID] = ['no data', 'wait', (0,0)]
+                        myPeople[objectID] = ['unknown!', '... C', (0,0)]
                     else:
                         coordinate = dict_suhu[objectID]['coordinate']
                         suhu_max= dict_suhu[objectID]['max']

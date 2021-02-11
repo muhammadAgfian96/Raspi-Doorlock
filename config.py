@@ -1,3 +1,4 @@
+import sys
 from easydict import EasyDict as edict 
 import cv2
 import numpy as np
@@ -20,7 +21,7 @@ def get_configs(**kwargs):
 
     # zmq handler
     conf.zmq = {}
-    conf.zmq.REQUEST_TIMEOUT = 5000
+    conf.zmq.REQUEST_TIMEOUT = 500
     conf.zmq.REQUEST_RETRIES = 3
     conf.zmq.SERVER_ENDPOINT = conf.addr.tcp_server
 
@@ -44,8 +45,8 @@ def get_configs(**kwargs):
     conf.doorlock.months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 
                             'Jun', 'Jul', 'Aug', 'Okt', 'Sep',
                             'Nov', 'Dec']
-    conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
-    conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
+    # conf.doorlock.waiting_image = load_image_to_screen('screen_saver.jpg')
+    # conf.doorlock.too_far_image = load_image_to_screen('too_far.jpg')
 
     # debugging
     conf.debug = {}
