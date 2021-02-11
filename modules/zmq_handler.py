@@ -8,13 +8,14 @@
 # https://zguide.zeromq.org/docs/chapter4/
 import sys
 sys.path.append('modules')
+sys.path.append('..')
 import itertools
 import logging
 import sys
 import zmq
 import ast
 import time
-import raspi_handler as rpi
+# import raspi_handler as rpi
 from config import get_configs
 
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
@@ -41,7 +42,7 @@ class ZMQ_handler:
         '''
         if self.hasSend: 
             # jika sudah dikirim...
-            print('sudah dikirim')
+            print('sudah dikirim. Status hasReceive:', self.hasReceive, self.retries_left)
         else: 
             # jika belum dikirim
             self.my_data = {
@@ -63,12 +64,12 @@ class ZMQ_handler:
                 if regonized_name.lower() == "unknown":
                     #socket.send(b"High")
                     print("Unknown, Not Open")
-                    rpi.open_status_face = False
+                    # rpi.open_status_face = False
                 elif regonized_name.lower() != "unknown":
-                    rpi.open_status_face = True
+                    # rpi.open_status_face = True
                     dict_name[id_name] = regonized_name
         
-        rpi.main_output()
+        # rpi.main_output()
         return list_bboxes, dict_name
 
 
@@ -86,12 +87,11 @@ class ZMQ_handler:
         '''
         reply = {}
         list_bboxes, dict_name = [], {}
-        self.hasReceive = False
-        # if (self.client.poll(self.conf.zmq.REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
         try:
+            # if (self.client.poll(self.conf.zmq.REQUEST_TIMEOUT) & zmq.POLLIN) != 0:
             reply = self.client.recv(flags=zmq.NOBLOCK)
             reply = ast.literal_eval(reply.decode('utf-8'))
-            list_bboxes, dict_name = self.processingReply(reply)
+            # list_bboxes, dict_name = self.processingReply(reply)
             logging.info("Server replied OK (%s)", reply)
             self.hasReceive = True
             self.hasSend = False
@@ -100,7 +100,7 @@ class ZMQ_handler:
             self.hasReceive = False
             if self.hasSend:
                 self.retries_left -= 1
-                logging.warning("No response from server")
+                logging.warning("[waiting_reply] No response from server")
 
 
         return list_bboxes, dict_name
@@ -128,3 +128,13 @@ class ZMQ_handler:
 
             self.retries_left = self.conf.zmq.REQUEST_RETRIES
 
+if __name__ == '__main__':
+    my_zmq = ZMQ_handler()
+    while True:
+        prepared_data = {
+            'hahaha': 'hehehe'
+        }
+        my_zmq.send_request(data=prepared_data, topic='pi-depan')
+        my_zmq.waiting_reply()
+        my_zmq.reconnecting()
+        time.sleep(2)
